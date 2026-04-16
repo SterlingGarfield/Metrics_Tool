@@ -1,0 +1,143 @@
+:root {
+  --ink: #13212f;
+  --paper: #f5f1e8;
+  --accent: #c45b2d;
+  --panel: #fffdfa;
+  --line: #d7c9b7;
+  --shadow: 0 18px 40px rgba(19, 33, 47, 0.08);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(196, 91, 45, 0.18), transparent 34%),
+    linear-gradient(180deg, #f6efe3 0%, #ece4d9 100%);
+}
+
+.app-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.hero {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+
+.lede {
+  max-width: 680px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.mode-row,
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mode-pill,
+.primary-button {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.mode-pill.active,
+.primary-button {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.pane {
+  display: grid;
+  gap: 12px;
+}
+
+textarea,
+input[type='file'] {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  padding: 16px;
+  background: white;
+}
+
+textarea {
+  min-height: 280px;
+  font-family: Consolas, "Courier New", monospace;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.metric-card strong {
+  font-size: 2rem;
+}
+
+.chart-surface {
+  width: 100%;
+  height: 360px;
+}
+
+.table-stack table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.table-stack th,
+.table-stack td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.status-banner {
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(19, 33, 47, 0.08);
+}
+
+.status-banner.error {
+  background: rgba(196, 91, 45, 0.18);
+}

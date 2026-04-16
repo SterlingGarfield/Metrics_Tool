@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.npm-cache/
+.m2/
+metrics-backend/target/
+metrics-backend/src/main/resources/static/
+.worktrees/
