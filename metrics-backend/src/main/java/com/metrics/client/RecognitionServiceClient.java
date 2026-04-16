@@ -1,15 +1,12 @@
 package com.metrics.client;
 
 import com.metrics.config.RecognitionServiceProperties;
-import com.metrics.model.request.EstimateProjectRequest;
+import com.metrics.exception.RecognitionServiceException;
 import com.metrics.model.request.StructuredDiagramAnalyzeRequest;
 import com.metrics.model.response.ConfidenceSummary;
 import com.metrics.model.response.DiagramAnalysisResponse;
-import com.metrics.model.response.EstimationBasis;
-import com.metrics.model.response.ProjectEstimation;
 import com.metrics.model.response.RecognitionIssue;
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.core.io.ByteArrayResource;
@@ -19,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,31 +33,43 @@ public class RecognitionServiceClient {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> health() {
-        Map<String, Object> response = recognitionRestTemplate.getForObject("/recognition/health", Map.class);
-        if (response == null) {
-            return Map.of("status", "DOWN", "service", "diagram-recognition");
+        try {
+            Map<String, Object> response = recognitionRestTemplate.getForObject("/recognition/health", Map.class);
+            if (response == null) {
+                return Map.of("status", "DOWN", "service", "diagram-recognition");
+            }
+            return response;
+        } catch (RestClientException ex) {
+            throw new RecognitionServiceException("Recognition service unavailable", ex);
         }
-        return response;
     }
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> modelsStatus() {
-        Map<String, Object> response = recognitionRestTemplate.getForObject("/recognition/models/status", Map.class);
-        if (response == null) {
-            return Map.of("ready", false, "modelCachePath", properties.getModelCachePath());
+        try {
+            Map<String, Object> response = recognitionRestTemplate.getForObject("/recognition/models/status", Map.class);
+            if (response == null) {
+                return Map.of("ready", false, "modelCachePath", properties.getModelCachePath());
+            }
+            return response;
+        } catch (RestClientException ex) {
+            throw new RecognitionServiceException("Recognition service unavailable", ex);
         }
-        return response;
     }
 
     public DiagramAnalysisResponse analyzeStructured(StructuredDiagramAnalyzeRequest request) {
-        DiagramAnalysisResponse response = recognitionRestTemplate.postForObject(
-            "/recognition/analyze/structured",
-            request,
-            DiagramAnalysisResponse.class
-        );
-        return response == null
-            ? emptyDiagramResponse(request.diagramType(), "structured")
-            : response;
+        try {
+            DiagramAnalysisResponse response = recognitionRestTemplate.postForObject(
+                "/recognition/analyze/structured",
+                request,
+                DiagramAnalysisResponse.class
+            );
+            return response == null
+                ? emptyDiagramResponse(request.diagramType(), "structured")
+                : response;
+        } catch (RestClientException ex) {
+            throw new RecognitionServiceException("Recognition service unavailable", ex);
+        }
     }
 
     public DiagramAnalysisResponse analyzeImage(String diagramType, MultipartFile file) {
@@ -69,36 +79,19 @@ public class RecognitionServiceClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        DiagramAnalysisResponse response = recognitionRestTemplate.postForObject(
-            "/recognition/analyze/image",
-            new HttpEntity<>(body, headers),
-            DiagramAnalysisResponse.class
-        );
+        try {
+            DiagramAnalysisResponse response = recognitionRestTemplate.postForObject(
+                "/recognition/analyze/image",
+                new HttpEntity<>(body, headers),
+                DiagramAnalysisResponse.class
+            );
 
-        return response == null
-            ? emptyDiagramResponse(diagramType, "image")
-            : response;
-    }
-
-    public ProjectEstimation estimateProject(EstimateProjectRequest request) {
-        ProjectEstimation response = recognitionRestTemplate.postForObject(
-            "/recognition/estimate/project",
-            request,
-            ProjectEstimation.class
-        );
-        if (response != null) {
-            return response;
+            return response == null
+                ? emptyDiagramResponse(diagramType, "image")
+                : response;
+        } catch (RestClientException ex) {
+            throw new RecognitionServiceException("Recognition service unavailable", ex);
         }
-        return new ProjectEstimation(
-            0.0,
-            0.0,
-            0.0,
-            1,
-            new EstimationBasis(
-                "No estimation returned by recognition service.",
-                "Fallback response generated by metrics backend."
-            )
-        );
     }
 
     private ByteArrayResource toMultipartResource(MultipartFile file) {

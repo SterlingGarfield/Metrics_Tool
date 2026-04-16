@@ -6,6 +6,7 @@ import com.metrics.analyzer.ProjectMetricsAnalyzer;
 import com.metrics.model.SourceInput;
 import com.metrics.model.request.TextAnalyzeRequest;
 import com.metrics.model.response.AnalysisResponse;
+import com.metrics.model.response.CodeMetricsResult;
 import com.metrics.model.response.ParseIssue;
 import com.metrics.model.response.RiskFinding;
 import com.metrics.parser.JavaSourceParser;
@@ -52,7 +53,9 @@ public class MetricsAnalysisService {
         var classes = classMetricsAnalyzer.analyze(inputs, compilationUnits, methods);
         var projectSummary = projectMetricsAnalyzer.summarizeBatch(inputs, compilationUnits, methods, classes);
         var findings = buildRiskFindings(classes, methods);
-        return new AnalysisResponse(projectSummary, classes, methods, findings, issues, !issues.isEmpty());
+        boolean partial = !issues.isEmpty();
+        CodeMetricsResult codeMetrics = CodeMetricsResult.fromMetrics(projectSummary, classes, methods, issues, partial);
+        return new AnalysisResponse(projectSummary, classes, methods, findings, issues, partial, codeMetrics, null, null);
     }
 
     private List<RiskFinding> buildRiskFindings(List<com.metrics.model.response.ClassMetrics> classes, List<com.metrics.model.response.MethodMetrics> methods) {

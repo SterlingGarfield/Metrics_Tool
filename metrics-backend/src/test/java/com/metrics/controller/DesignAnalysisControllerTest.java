@@ -1,13 +1,15 @@
 package com.metrics.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.metrics.client.RecognitionServiceClient;
+import com.metrics.exception.RecognitionServiceException;
+import com.metrics.model.request.StructuredDiagramAnalyzeRequest;
 import com.metrics.model.response.ConfidenceSummary;
 import com.metrics.model.response.DiagramAnalysisResponse;
 import com.metrics.model.response.DiagramElement;
@@ -16,7 +18,9 @@ import com.metrics.model.response.DiagramRelation;
 import com.metrics.model.response.RecognitionIssue;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -35,9 +39,29 @@ class DesignAnalysisControllerTest {
 
     @Test
     void analyzeStructuredRejectsMissingDiagramType() throws Exception {
-        mockMvc.perform(post("/api/design/analyze/structured")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"source\":\"@startuml\\nclass Demo\\n@enduml\"}"))
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "library-domain.puml",
+            MediaType.TEXT_PLAIN_VALUE,
+            "@startuml\nclass Demo\n@enduml".getBytes(StandardCharsets.UTF_8)
+        );
+
+        mockMvc.perform(multipart("/api/design/analyze/structured")
+                .file(file))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void analyzeStructuredRejectsMissingFile() throws Exception {
+        MockMultipartFile diagramType = new MockMultipartFile(
+            "diagramType",
+            "",
+            MediaType.TEXT_PLAIN_VALUE,
+            "class".getBytes(StandardCharsets.UTF_8)
+        );
+
+        mockMvc.perform(multipart("/api/design/analyze/structured")
+                .file(diagramType))
             .andExpect(status().isBadRequest());
     }
 
@@ -54,14 +78,22 @@ class DesignAnalysisControllerTest {
         );
         when(recognitionServiceClient.analyzeStructured(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/design/analyze/structured")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {
-                      \"diagramType\": \"class\",
-                      \"source\": \"@startuml\\nclass Book\\nclass Author\\nBook --> Author\\n@enduml\"
-                    }
-                    """))
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "library-domain.puml",
+            MediaType.TEXT_PLAIN_VALUE,
+            "@startuml\nclass Book\nclass Author\nBook --> Author\n@enduml".getBytes(StandardCharsets.UTF_8)
+        );
+        MockMultipartFile diagramType = new MockMultipartFile(
+            "diagramType",
+            "",
+            MediaType.TEXT_PLAIN_VALUE,
+            "class".getBytes(StandardCharsets.UTF_8)
+        );
+
+        mockMvc.perform(multipart("/api/design/analyze/structured")
+                .file(file)
+                .file(diagramType))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.codeMetrics").hasJsonPath())
             .andExpect(jsonPath("$.diagramAnalysis").hasJsonPath())
@@ -72,6 +104,14 @@ class DesignAnalysisControllerTest {
             .andExpect(jsonPath("$.diagramAnalysis.metrics[0].name").value("classCount"))
             .andExpect(jsonPath("$.diagramAnalysis.confidence.overall").value(0.94))
             .andExpect(jsonPath("$.diagramAnalysis.issues[0].level").value("warning"));
+
+        ArgumentCaptor<StructuredDiagramAnalyzeRequest> requestCaptor = ArgumentCaptor.forClass(StructuredDiagramAnalyzeRequest.class);
+        verify(recognitionServiceClient).analyzeStructured(requestCaptor.capture());
+        StructuredDiagramAnalyzeRequest forwarded = requestCaptor.getValue();
+        Assertions.assertEquals("class", forwarded.diagramType());
+        Assertions.assertEquals("library-domain.puml", forwarded.fileName());
+        Assertions.assertEquals("puml", forwarded.sourceSuffix());
+        Assertions.assertTrue(forwarded.source().contains("class Book"));
     }
 
     @Test
@@ -124,5 +164,31 @@ class DesignAnalysisControllerTest {
             .andExpect(jsonPath("$.diagramAnalysis.metrics[0].name").value("decisionNodeCount"))
             .andExpect(jsonPath("$.diagramAnalysis.confidence.directlyMeasurable").value(false))
             .andExpect(jsonPath("$.diagramAnalysis.issues[0].code").value("LOW_CONFIDENCE_OCR"));
+    }
+
+    @Test
+    void analyzeImageReturnsServiceUnavailableWhenRecognitionFails() throws Exception {
+        when(recognitionServiceClient.analyzeImage(any(), any()))
+            .thenThrow(new RecognitionServiceException("Recognition service unavailable"));
+
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "flow.png",
+            MediaType.IMAGE_PNG_VALUE,
+            "fake-png-data".getBytes(StandardCharsets.UTF_8)
+        );
+        MockMultipartFile diagramType = new MockMultipartFile(
+            "diagramType",
+            "",
+            MediaType.TEXT_PLAIN_VALUE,
+            "flow".getBytes(StandardCharsets.UTF_8)
+        );
+
+        mockMvc.perform(multipart("/api/design/analyze/image")
+                .file(file)
+                .file(diagramType))
+            .andExpect(status().isServiceUnavailable())
+            .andExpect(jsonPath("$.service").value("diagram-recognition"))
+            .andExpect(jsonPath("$.status").value("DOWN"));
     }
 }

@@ -1,14 +1,15 @@
 package com.metrics.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.metrics.client.RecognitionServiceClient;
 import com.metrics.model.response.EstimationBasis;
 import com.metrics.model.response.ProjectEstimation;
+import com.metrics.service.EstimationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,7 +24,7 @@ class EstimationControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private RecognitionServiceClient recognitionServiceClient;
+    private EstimationService estimationService;
 
     @Test
     void estimateProjectRejectsMissingDiagramType() throws Exception {
@@ -45,7 +46,7 @@ class EstimationControllerTest {
                 "Uses totalLoc, classCount, relationshipCount, useCaseCount, and decisionNodeCount."
             )
         );
-        when(recognitionServiceClient.estimateProject(any())).thenReturn(estimation);
+        when(estimationService.estimate(any())).thenReturn(estimation);
 
         mockMvc.perform(post("/api/estimate/project")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -67,5 +68,7 @@ class EstimationControllerTest {
             .andExpect(jsonPath("$.projectEstimation.suggestedStaffing").value(2))
             .andExpect(jsonPath("$.projectEstimation.basis.summary").value("Heuristic blend of code and diagram complexity."))
             .andExpect(jsonPath("$.projectEstimation.basis.details").value("Uses totalLoc, classCount, relationshipCount, useCaseCount, and decisionNodeCount."));
+
+        verify(estimationService).estimate(any());
     }
 }

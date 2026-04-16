@@ -37,5 +37,11 @@ class MetricsAnalysisServiceTest {
         assertThat(response.methodMetrics()).hasSize(1);
         assertThat(response.methodMetrics().get(0).cyclomaticComplexity()).isEqualTo(2);
         assertThat(response.parseIssues()).isEmpty();
+        assertThat(response.codeMetrics()).isNotNull();
+        assertThat(response.codeMetrics().lkPresentation()).isNotNull();
+        assertThat(response.codeMetrics().lkPresentation().classCount()).isEqualTo(1);
+        assertThat(response.codeMetrics().lkPresentation().methodCount()).isEqualTo(1);
+        assertThat(response.codeMetrics().lkPresentation().relationshipCount()).isNull();
+        assertThat(response.codeMetrics().lkPresentation().relationDensity()).isNull();
     }
 }

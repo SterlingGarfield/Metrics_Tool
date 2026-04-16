@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.metrics.client.RecognitionServiceClient;
+import com.metrics.exception.RecognitionServiceException;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,5 +38,16 @@ class RecognitionStatusControllerTest {
 
         verify(recognitionServiceClient).health();
         verify(recognitionServiceClient).modelsStatus();
+    }
+
+    @Test
+    void healthReturnsServiceUnavailableWhenPythonServiceIsDown() throws Exception {
+        when(recognitionServiceClient.health()).thenThrow(new RecognitionServiceException("Recognition service unavailable"));
+
+        mockMvc.perform(get("/api/recognition/health"))
+            .andExpect(status().isServiceUnavailable())
+            .andExpect(jsonPath("$.service").value("diagram-recognition"))
+            .andExpect(jsonPath("$.status").value("DOWN"))
+            .andExpect(jsonPath("$.message").value("Recognition service unavailable"));
     }
 }
