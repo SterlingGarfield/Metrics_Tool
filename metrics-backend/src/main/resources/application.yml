@@ -4,3 +4,9 @@ spring:
 
 server:
   port: 8080
+
+recognition:
+  base-url: http://localhost:8090
+  model-cache-path: D:/Projects/SQA/Metrics_Tool/models
+  connect-timeout-ms: 5000
+  read-timeout-ms: 60000
