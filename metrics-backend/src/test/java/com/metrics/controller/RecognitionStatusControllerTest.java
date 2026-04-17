@@ -1,6 +1,7 @@
 package com.metrics.controller;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,16 +28,25 @@ class RecognitionStatusControllerTest {
     @Test
     void healthProxiesPythonReadinessIntoSimpleResponse() throws Exception {
         when(recognitionServiceClient.health()).thenReturn(Map.of("status", "UP", "service", "diagram-recognition"));
-        when(recognitionServiceClient.modelsStatus()).thenReturn(Map.of("ready", true, "modelsLoaded", true));
 
         mockMvc.perform(get("/api/recognition/health"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("UP"))
-            .andExpect(jsonPath("$.service").value("diagram-recognition"))
+            .andExpect(jsonPath("$.service").value("diagram-recognition"));
+
+        verify(recognitionServiceClient).health();
+        verifyNoMoreInteractions(recognitionServiceClient);
+    }
+
+    @Test
+    void modelsStatusProxiesModelReadinessSeparately() throws Exception {
+        when(recognitionServiceClient.modelsStatus()).thenReturn(Map.of("ready", true, "modelsLoaded", true));
+
+        mockMvc.perform(get("/api/recognition/models/status"))
+            .andExpect(status().isOk())
             .andExpect(jsonPath("$.ready").value(true))
             .andExpect(jsonPath("$.modelsLoaded").value(true));
 
-        verify(recognitionServiceClient).health();
         verify(recognitionServiceClient).modelsStatus();
     }
 

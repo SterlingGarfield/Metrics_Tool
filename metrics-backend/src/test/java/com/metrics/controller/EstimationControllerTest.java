@@ -35,6 +35,24 @@ class EstimationControllerTest {
     }
 
     @Test
+    void estimateProjectRejectsInvalidDiagramType() throws Exception {
+        mockMvc.perform(post("/api/estimate/project")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      \"diagramType\": \"Class\",
+                      \"totalLoc\": 3200,
+                      \"classCount\": 18,
+                      \"relationshipCount\": 26,
+                      \"useCaseCount\": 0,
+                      \"decisionNodeCount\": 0,
+                      \"costRatePerPersonMonth\": 15000
+                    }
+                    """))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void estimateProjectReturnsWorkloadCostScheduleStaffingAndBasis() throws Exception {
         ProjectEstimation estimation = new ProjectEstimation(
             3.6,

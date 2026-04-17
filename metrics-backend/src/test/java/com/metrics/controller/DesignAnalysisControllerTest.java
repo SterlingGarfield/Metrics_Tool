@@ -66,6 +66,27 @@ class DesignAnalysisControllerTest {
     }
 
     @Test
+    void analyzeStructuredRejectsInvalidDiagramType() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "library-domain.puml",
+            MediaType.TEXT_PLAIN_VALUE,
+            "@startuml\nclass Demo\n@enduml".getBytes(StandardCharsets.UTF_8)
+        );
+        MockMultipartFile diagramType = new MockMultipartFile(
+            "diagramType",
+            "",
+            MediaType.TEXT_PLAIN_VALUE,
+            "sequence".getBytes(StandardCharsets.UTF_8)
+        );
+
+        mockMvc.perform(multipart("/api/design/analyze/structured")
+                .file(file)
+                .file(diagramType))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void analyzeStructuredReturnsReservedContractFieldsAndDiagramPayload() throws Exception {
         DiagramAnalysisResponse response = new DiagramAnalysisResponse(
             "class",
@@ -108,7 +129,7 @@ class DesignAnalysisControllerTest {
         ArgumentCaptor<StructuredDiagramAnalyzeRequest> requestCaptor = ArgumentCaptor.forClass(StructuredDiagramAnalyzeRequest.class);
         verify(recognitionServiceClient).analyzeStructured(requestCaptor.capture());
         StructuredDiagramAnalyzeRequest forwarded = requestCaptor.getValue();
-        Assertions.assertEquals("class", forwarded.diagramType());
+        Assertions.assertEquals("class", forwarded.diagramType().value());
         Assertions.assertEquals("library-domain.puml", forwarded.fileName());
         Assertions.assertEquals("puml", forwarded.sourceSuffix());
         Assertions.assertTrue(forwarded.source().contains("class Book"));
@@ -126,6 +147,27 @@ class DesignAnalysisControllerTest {
         mockMvc.perform(multipart("/api/design/analyze/image")
                 .file(diagramType)
                 .contentType(MediaType.MULTIPART_FORM_DATA))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void analyzeImageRejectsInvalidDiagramType() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "flow.png",
+            MediaType.IMAGE_PNG_VALUE,
+            "fake-png-data".getBytes(StandardCharsets.UTF_8)
+        );
+        MockMultipartFile diagramType = new MockMultipartFile(
+            "diagramType",
+            "",
+            MediaType.TEXT_PLAIN_VALUE,
+            "Class".getBytes(StandardCharsets.UTF_8)
+        );
+
+        mockMvc.perform(multipart("/api/design/analyze/image")
+                .file(file)
+                .file(diagramType))
             .andExpect(status().isBadRequest());
     }
 

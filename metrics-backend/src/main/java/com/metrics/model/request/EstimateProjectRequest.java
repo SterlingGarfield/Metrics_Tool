@@ -1,11 +1,12 @@
 package com.metrics.model.request;
 
-import jakarta.validation.constraints.NotBlank;
+import com.metrics.model.DiagramType;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
 public record EstimateProjectRequest(
-    @NotBlank String diagramType,
+    @NotNull DiagramType diagramType,
     @PositiveOrZero Integer totalLoc,
     @PositiveOrZero Integer classCount,
     @PositiveOrZero Integer relationshipCount,

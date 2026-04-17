@@ -1,6 +1,7 @@
 package com.metrics.controller;
 
 import com.metrics.client.RecognitionServiceClient;
+import com.metrics.model.DiagramType;
 import com.metrics.model.request.StructuredDiagramAnalyzeRequest;
 import com.metrics.model.response.AnalysisResponse;
 import com.metrics.model.response.DiagramAnalysisResponse;
@@ -8,8 +9,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,7 +47,8 @@ public class DesignAnalysisController {
         @RequestPart("file") MultipartFile file,
         @RequestPart("diagramType") @NotBlank String diagramType
     ) {
-        DiagramAnalysisResponse diagramAnalysis = recognitionServiceClient.analyzeImage(diagramType, file);
+        DiagramType parsedDiagramType = parseDiagramType(diagramType);
+        DiagramAnalysisResponse diagramAnalysis = recognitionServiceClient.analyzeImage(parsedDiagramType.value(), file);
         return AnalysisResponse.withDiagramAnalysis(diagramAnalysis);
     }
 
@@ -59,11 +61,20 @@ public class DesignAnalysisController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Structured diagram file name is required");
         }
         String suffix = extractSuffix(fileName);
+        DiagramType parsedDiagramType = parseDiagramType(diagramType);
         try {
             String source = new String(file.getBytes(), StandardCharsets.UTF_8);
-            return new StructuredDiagramAnalyzeRequest(diagramType, fileName, suffix, source);
+            return new StructuredDiagramAnalyzeRequest(parsedDiagramType, fileName, suffix, source);
         } catch (IOException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to read structured diagram file", ex);
+        }
+    }
+
+    private DiagramType parseDiagramType(String diagramType) {
+        try {
+            return DiagramType.fromValue(diagramType);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
         }
     }
 

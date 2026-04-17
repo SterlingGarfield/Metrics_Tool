@@ -65,7 +65,7 @@ public class RecognitionServiceClient {
                 DiagramAnalysisResponse.class
             );
             return response == null
-                ? emptyDiagramResponse(request.diagramType(), "structured")
+                ? emptyDiagramResponse(request.diagramType().value(), "structured")
                 : response;
         } catch (RestClientException ex) {
             throw new RecognitionServiceException("Recognition service unavailable", ex);
