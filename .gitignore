@@ -5,3 +5,7 @@ dist/
 metrics-backend/target/
 metrics-backend/src/main/resources/static/
 .worktrees/
+diagram-recognition-service/.venv/
+**/__pycache__/
+*.pyc
+.pytest_cache/

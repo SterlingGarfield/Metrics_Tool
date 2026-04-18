@@ -1,0 +1,7 @@
+flowchart TD
+  Start([Start]) --> Submit[Submit Order]
+  Submit --> Review{Approved?}
+  Review -->|Yes| Fulfill[Ship Order]
+  Review -->|No| Reject[Reject Order]
+  Fulfill --> End([End])
+  Reject --> End
