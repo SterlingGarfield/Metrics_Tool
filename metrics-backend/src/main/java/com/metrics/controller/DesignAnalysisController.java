@@ -1,10 +1,9 @@
 package com.metrics.controller;
 
-import com.metrics.client.RecognitionServiceClient;
 import com.metrics.model.DiagramType;
 import com.metrics.model.request.StructuredDiagramAnalyzeRequest;
 import com.metrics.model.response.AnalysisResponse;
-import com.metrics.model.response.DiagramAnalysisResponse;
+import com.metrics.service.DesignAnalysisService;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
@@ -26,10 +25,10 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/design/analyze")
 public class DesignAnalysisController {
 
-    private final RecognitionServiceClient recognitionServiceClient;
+    private final DesignAnalysisService designAnalysisService;
 
-    public DesignAnalysisController(RecognitionServiceClient recognitionServiceClient) {
-        this.recognitionServiceClient = recognitionServiceClient;
+    public DesignAnalysisController(DesignAnalysisService designAnalysisService) {
+        this.designAnalysisService = designAnalysisService;
     }
 
     @PostMapping(value = "/structured", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -38,8 +37,7 @@ public class DesignAnalysisController {
         @RequestPart("diagramType") @NotBlank String diagramType
     ) {
         StructuredDiagramAnalyzeRequest request = toStructuredRequest(file, diagramType);
-        DiagramAnalysisResponse diagramAnalysis = recognitionServiceClient.analyzeStructured(request);
-        return AnalysisResponse.withDiagramAnalysis(diagramAnalysis);
+        return designAnalysisService.analyzeStructured(request);
     }
 
     @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -48,8 +46,7 @@ public class DesignAnalysisController {
         @RequestPart("diagramType") @NotBlank String diagramType
     ) {
         DiagramType parsedDiagramType = parseDiagramType(diagramType);
-        DiagramAnalysisResponse diagramAnalysis = recognitionServiceClient.analyzeImage(parsedDiagramType.value(), file);
-        return AnalysisResponse.withDiagramAnalysis(diagramAnalysis);
+        return designAnalysisService.analyzeImage(parsedDiagramType.value(), file);
     }
 
     private StructuredDiagramAnalyzeRequest toStructuredRequest(MultipartFile file, String diagramType) {

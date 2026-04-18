@@ -7,15 +7,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.metrics.client.RecognitionServiceClient;
-import com.metrics.exception.RecognitionServiceException;
+import com.metrics.exception.FeatureNotReadyException;
 import com.metrics.model.request.StructuredDiagramAnalyzeRequest;
+import com.metrics.model.response.AnalysisResponse;
 import com.metrics.model.response.ConfidenceSummary;
 import com.metrics.model.response.DiagramAnalysisResponse;
 import com.metrics.model.response.DiagramElement;
 import com.metrics.model.response.DiagramMetricValue;
 import com.metrics.model.response.DiagramRelation;
 import com.metrics.model.response.RecognitionIssue;
+import com.metrics.service.DesignAnalysisService;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
@@ -35,7 +36,7 @@ class DesignAnalysisControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private RecognitionServiceClient recognitionServiceClient;
+    private DesignAnalysisService designAnalysisService;
 
     @Test
     void analyzeStructuredRejectsMissingDiagramType() throws Exception {
@@ -97,7 +98,7 @@ class DesignAnalysisControllerTest {
             new ConfidenceSummary(0.94, true),
             List.of(new RecognitionIssue("warning", "LOW_CONFIDENCE_LABEL", "Label confidence is low"))
         );
-        when(recognitionServiceClient.analyzeStructured(any())).thenReturn(response);
+        when(designAnalysisService.analyzeStructured(any())).thenReturn(AnalysisResponse.withDiagramAnalysis(response));
 
         MockMultipartFile file = new MockMultipartFile(
             "file",
@@ -127,7 +128,7 @@ class DesignAnalysisControllerTest {
             .andExpect(jsonPath("$.diagramAnalysis.issues[0].level").value("warning"));
 
         ArgumentCaptor<StructuredDiagramAnalyzeRequest> requestCaptor = ArgumentCaptor.forClass(StructuredDiagramAnalyzeRequest.class);
-        verify(recognitionServiceClient).analyzeStructured(requestCaptor.capture());
+        verify(designAnalysisService).analyzeStructured(requestCaptor.capture());
         StructuredDiagramAnalyzeRequest forwarded = requestCaptor.getValue();
         Assertions.assertEquals("class", forwarded.diagramType().value());
         Assertions.assertEquals("library-domain.puml", forwarded.fileName());
@@ -172,17 +173,9 @@ class DesignAnalysisControllerTest {
     }
 
     @Test
-    void analyzeImageReturnsDiagramPayload() throws Exception {
-        DiagramAnalysisResponse response = new DiagramAnalysisResponse(
-            "flow",
-            "image",
-            List.of(new DiagramElement("Decision", "Approved?", "diamond", 0.89)),
-            List.of(new DiagramRelation("Review", "Approved?", "sequence", 0.86)),
-            List.of(new DiagramMetricValue("decisionNodeCount", 1.0, "count", "Detected decisions")),
-            new ConfidenceSummary(0.88, false),
-            List.of(new RecognitionIssue("warning", "LOW_CONFIDENCE_OCR", "OCR confidence below threshold"))
-        );
-        when(recognitionServiceClient.analyzeImage(any(), any())).thenReturn(response);
+    void analyzeImageReturnsNotImplementedUntilPipelineIsReady() throws Exception {
+        when(designAnalysisService.analyzeImage(any(), any()))
+            .thenThrow(new FeatureNotReadyException("Image recognition pipeline is not implemented yet"));
 
         MockMultipartFile file = new MockMultipartFile(
             "file",
@@ -200,37 +193,9 @@ class DesignAnalysisControllerTest {
         mockMvc.perform(multipart("/api/design/analyze/image")
                 .file(file)
                 .file(diagramType))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.diagramAnalysis.diagramType").value("flow"))
-            .andExpect(jsonPath("$.diagramAnalysis.sourceType").value("image"))
-            .andExpect(jsonPath("$.diagramAnalysis.metrics[0].name").value("decisionNodeCount"))
-            .andExpect(jsonPath("$.diagramAnalysis.confidence.directlyMeasurable").value(false))
-            .andExpect(jsonPath("$.diagramAnalysis.issues[0].code").value("LOW_CONFIDENCE_OCR"));
-    }
-
-    @Test
-    void analyzeImageReturnsServiceUnavailableWhenRecognitionFails() throws Exception {
-        when(recognitionServiceClient.analyzeImage(any(), any()))
-            .thenThrow(new RecognitionServiceException("Recognition service unavailable"));
-
-        MockMultipartFile file = new MockMultipartFile(
-            "file",
-            "flow.png",
-            MediaType.IMAGE_PNG_VALUE,
-            "fake-png-data".getBytes(StandardCharsets.UTF_8)
-        );
-        MockMultipartFile diagramType = new MockMultipartFile(
-            "diagramType",
-            "",
-            MediaType.TEXT_PLAIN_VALUE,
-            "flow".getBytes(StandardCharsets.UTF_8)
-        );
-
-        mockMvc.perform(multipart("/api/design/analyze/image")
-                .file(file)
-                .file(diagramType))
-            .andExpect(status().isServiceUnavailable())
+            .andExpect(status().isNotImplemented())
             .andExpect(jsonPath("$.service").value("diagram-recognition"))
-            .andExpect(jsonPath("$.status").value("DOWN"));
+            .andExpect(jsonPath("$.status").value("NOT_IMPLEMENTED"))
+            .andExpect(jsonPath("$.message").value("Image recognition pipeline is not implemented yet"));
     }
 }

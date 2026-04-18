@@ -18,4 +18,14 @@ public class ApiExceptionHandler {
                 "message", ex.getMessage()
             ));
     }
+
+    @ExceptionHandler(FeatureNotReadyException.class)
+    public ResponseEntity<Map<String, Object>> handleFeatureNotReady(FeatureNotReadyException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+            .body(Map.of(
+                "status", "NOT_IMPLEMENTED",
+                "service", "diagram-recognition",
+                "message", ex.getMessage()
+            ));
+    }
 }

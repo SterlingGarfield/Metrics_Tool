@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Literal
 from pydantic import BaseModel, Field
 
 DiagramType = Literal['class', 'flow', 'usecase']
@@ -65,3 +65,11 @@ class HealthResponse(BaseModel):
     status: str
     service: str
     modelCachePath: str
+
+
+class ModelsStatusResponse(BaseModel):
+    ready: bool
+    modelsLoaded: bool
+    modelCachePath: str
+    presentAssets: List[str] = Field(default_factory=list)
+    missingAssets: List[str] = Field(default_factory=list)
