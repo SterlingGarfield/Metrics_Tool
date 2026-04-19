@@ -9,6 +9,7 @@ SERVICE_ROOT = Path(__file__).resolve().parents[1]
 if str(SERVICE_ROOT) not in sys.path:
     sys.path.insert(0, str(SERVICE_ROOT))
 
+from app.services.image import ocr
 from app.services.models import runtime_validator
 from app.tools import warm_models
 
@@ -20,6 +21,29 @@ def test_current_site_packages_uses_active_interpreter_path(monkeypatch):
     site_packages = runtime_validator.current_site_packages()
 
     assert site_packages == Path(fake_interpreter).parent / "Lib" / "site-packages"
+
+
+def test_runtime_site_packages_only_uses_active_interpreter_site_packages(monkeypatch):
+    fake_interpreter = r"D:\active\python.exe"
+    active_site_packages = Path(fake_interpreter).parent / "Lib" / "site-packages"
+    alternate_site_packages = Path(ocr.__file__).resolve().parents[6] / ".ocr311" / "Lib" / "site-packages"
+
+    monkeypatch.setattr(runtime_validator.sys, "executable", fake_interpreter)
+
+    def fake_exists(self: Path) -> bool:
+        candidate = Path(self)
+        if candidate in {
+            active_site_packages,
+            alternate_site_packages,
+            active_site_packages / "paddle" / "base" / "libpaddle.pyd",
+            alternate_site_packages / "paddle" / "base" / "libpaddle.pyd",
+        }:
+            return True
+        return False
+
+    monkeypatch.setattr(Path, "exists", fake_exists, raising=True)
+
+    assert ocr._runtime_site_packages() == [active_site_packages]
 
 
 def test_collect_runtime_diagnostics_reports_runtime_metadata(monkeypatch):
