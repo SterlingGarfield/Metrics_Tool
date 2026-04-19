@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib
 import importlib.metadata
-import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -23,13 +22,7 @@ class RuntimeDiagnostics:
 
 def current_site_packages(python_executable: str | None = None) -> Path:
     interpreter = python_executable or sys.executable
-    command = [
-        interpreter,
-        "-c",
-        "import sysconfig; print(sysconfig.get_paths()['purelib'])",
-    ]
-    result = subprocess.run(command, capture_output=True, text=True, check=True)
-    return Path(result.stdout.strip())
+    return Path(interpreter).expanduser().parent / "Lib" / "site-packages"
 
 
 def collect_runtime_diagnostics() -> RuntimeDiagnostics:
@@ -64,4 +57,8 @@ def _collect_package_version(module_name: str, package_name: str, issues: list[s
     try:
         return importlib.metadata.version(package_name)
     except importlib.metadata.PackageNotFoundError:
+        issues.append(f"Unable to resolve {package_name} version from package metadata")
+        return None
+    except Exception as exc:  # pragma: no cover - defensive fallback for unexpected metadata errors
+        issues.append(f"Unable to resolve {package_name} version from package metadata: {exc}")
         return None

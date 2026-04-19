@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 import json
 import sys
 
@@ -11,7 +10,7 @@ from app.services.models.runtime_validator import collect_runtime_diagnostics
 
 def main() -> int:
     paddleocr_cache = warm_paddleocr_assets()
-    _, messages = extract_text_blocks(_blank_probe_image())
+    _, probe_issues = extract_text_blocks(_blank_probe_image())
     status = describe_model_cache()
     runtime_diagnostics = collect_runtime_diagnostics()
     payload = {
@@ -20,11 +19,11 @@ def main() -> int:
         "ready": status.ready,
         "presentAssets": status.present_assets,
         "missingAssets": status.missing_assets,
-        "runtimeMetadata": asdict(runtime_diagnostics),
-        "issues": messages,
+        **runtime_diagnostics.to_payload(),
+        "ocrProbeIssues": probe_issues,
     }
     print(json.dumps(payload, ensure_ascii=True, indent=2))
-    return 0 if not messages else 1
+    return 0 if not runtime_diagnostics.issues and not probe_issues else 1
 
 
 def _blank_probe_image():
