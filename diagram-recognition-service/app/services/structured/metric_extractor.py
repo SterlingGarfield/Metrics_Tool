@@ -14,7 +14,7 @@ from app.services.structured.plantuml_parser import parse_plantuml_class, parse_
 def build_structured_analysis(diagram_type: str, file_name: str, source_suffix: str, source: str) -> DiagramAnalysisResponse:
     suffix = source_suffix.lower().lstrip('.')
     parsed = _dispatch_parse(diagram_type, suffix, source)
-    metrics = _build_metrics(diagram_type, parsed)
+    metrics = build_metrics_for_diagram(diagram_type, parsed)
     return DiagramAnalysisResponse(
         diagramType=diagram_type,
         sourceType='structured',
@@ -40,7 +40,7 @@ def _dispatch_parse(diagram_type: str, suffix: str, source: str) -> ParsedDiagra
     raise HTTPException(status_code=400, detail=f'Unsupported structured diagram input: {diagram_type}/{suffix}')
 
 
-def _build_metrics(diagram_type: str, parsed: ParsedDiagram) -> List[DiagramMetricValue]:
+def build_metrics_for_diagram(diagram_type: str, parsed: ParsedDiagram) -> List[DiagramMetricValue]:
     if diagram_type == 'class':
         return _class_metrics(parsed)
     if diagram_type == 'flow':
