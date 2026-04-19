@@ -1,0 +1,121 @@
+package com.metrics.client;
+
+import com.metrics.config.RecognitionServiceProperties;
+import com.metrics.exception.RecognitionServiceException;
+import com.metrics.model.request.StructuredDiagramAnalyzeRequest;
+import com.metrics.model.response.ConfidenceSummary;
+import com.metrics.model.response.DiagramAnalysisResponse;
+import com.metrics.model.response.RecognitionIssue;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+
+@Component
+public class RecognitionServiceClient {
+
+    private final RestTemplate recognitionRestTemplate;
+    private final RecognitionServiceProperties properties;
+
+    public RecognitionServiceClient(RestTemplate recognitionRestTemplate, RecognitionServiceProperties properties) {
+        this.recognitionRestTemplate = recognitionRestTemplate;
+        this.properties = properties;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> health() {
+        try {
+            Map<String, Object> response = recognitionRestTemplate.getForObject("/recognition/health", Map.class);
+            if (response == null) {
+                return Map.of("status", "DOWN", "service", "diagram-recognition");
+            }
+            return response;
+        } catch (RestClientException ex) {
+            throw new RecognitionServiceException("Recognition service unavailable", ex);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> modelsStatus() {
+        try {
+            Map<String, Object> response = recognitionRestTemplate.getForObject("/recognition/models/status", Map.class);
+            if (response == null) {
+                return Map.of("ready", false, "modelCachePath", properties.getModelCachePath());
+            }
+            return response;
+        } catch (RestClientException ex) {
+            throw new RecognitionServiceException("Recognition service unavailable", ex);
+        }
+    }
+
+    public DiagramAnalysisResponse analyzeStructured(StructuredDiagramAnalyzeRequest request) {
+        try {
+            DiagramAnalysisResponse response = recognitionRestTemplate.postForObject(
+                "/recognition/analyze/structured",
+                request,
+                DiagramAnalysisResponse.class
+            );
+            return response == null
+                ? emptyDiagramResponse(request.diagramType().value(), "structured")
+                : response;
+        } catch (RestClientException ex) {
+            throw new RecognitionServiceException("Recognition service unavailable", ex);
+        }
+    }
+
+    public DiagramAnalysisResponse analyzeImage(String diagramType, MultipartFile file) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("diagramType", diagramType);
+        body.add("file", toMultipartResource(file));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        try {
+            DiagramAnalysisResponse response = recognitionRestTemplate.postForObject(
+                "/recognition/analyze/image",
+                new HttpEntity<>(body, headers),
+                DiagramAnalysisResponse.class
+            );
+
+            return response == null
+                ? emptyDiagramResponse(diagramType, "image")
+                : response;
+        } catch (RestClientException ex) {
+            throw new RecognitionServiceException("Recognition service unavailable", ex);
+        }
+    }
+
+    private ByteArrayResource toMultipartResource(MultipartFile file) {
+        try {
+            return new ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            };
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to read uploaded diagram image", ex);
+        }
+    }
+
+    private DiagramAnalysisResponse emptyDiagramResponse(String diagramType, String sourceType) {
+        return new DiagramAnalysisResponse(
+            diagramType,
+            sourceType,
+            List.of(),
+            List.of(),
+            List.of(),
+            new ConfidenceSummary(0.0, false),
+            List.of(new RecognitionIssue("warning", "EMPTY_RESPONSE", "Recognition service returned an empty payload"))
+        );
+    }
+}
