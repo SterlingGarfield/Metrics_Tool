@@ -13,6 +13,7 @@ diagram-recognition-service/temp-root/
 diagram-recognition-service/tmp/
 diagram-recognition-service/pytest-run-models-status/
 diagram-recognition-service/pytest-run-models-status-2/
+diagram-recognition-service/pytest-temp/
 **/__pycache__/
 *.pyc
 .pytest_cache/

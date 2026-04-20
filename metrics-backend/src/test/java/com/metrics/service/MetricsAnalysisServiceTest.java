@@ -41,7 +41,7 @@ class MetricsAnalysisServiceTest {
         assertThat(response.codeMetrics().lkPresentation()).isNotNull();
         assertThat(response.codeMetrics().lkPresentation().classCount()).isEqualTo(1);
         assertThat(response.codeMetrics().lkPresentation().methodCount()).isEqualTo(1);
-        assertThat(response.codeMetrics().lkPresentation().relationshipCount()).isNull();
-        assertThat(response.codeMetrics().lkPresentation().relationDensity()).isNull();
+        assertThat(response.codeMetrics().lkPresentation().relationshipCount()).isEqualTo(0);
+        assertThat(response.codeMetrics().lkPresentation().relationDensity()).isEqualTo(0.0);
     }
 }

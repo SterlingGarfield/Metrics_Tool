@@ -1,5 +1,7 @@
 # Metrics Tool Workbench
 
+[中文说明](README.zh-CN.md)
+
 ## Environment
 
 - JDK 17
@@ -68,4 +70,3 @@ npm run test -- --run src/components/__tests__/InputWorkspace.test.js src/compon
 powershell -ExecutionPolicy Bypass -File .\scripts\build-demo.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\run-demo.ps1
 ```
-
