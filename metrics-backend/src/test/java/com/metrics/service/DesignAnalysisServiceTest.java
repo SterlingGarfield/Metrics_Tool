@@ -6,7 +6,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.metrics.client.RecognitionServiceClient;
-import com.metrics.exception.FeatureNotReadyException;
 import com.metrics.exception.RecognitionServiceException;
 import com.metrics.model.DiagramType;
 import com.metrics.model.request.StructuredDiagramAnalyzeRequest;
@@ -77,16 +76,28 @@ class DesignAnalysisServiceTest {
     }
 
     @Test
-    void analyzeImageSignalsFeatureNotReady() {
+    void analyzeImageWrapsRecognitionPayload() {
         MockMultipartFile file = new MockMultipartFile(
             "file",
             "flow.png",
             MediaType.IMAGE_PNG_VALUE,
             "fake-png-data".getBytes(StandardCharsets.UTF_8)
         );
+        DiagramAnalysisResponse diagramAnalysis = new DiagramAnalysisResponse(
+            "flow",
+            "image",
+            List.of(),
+            List.of(),
+            List.of(new DiagramMetricValue("nodeCount", 12.0, "count", "Detected flow nodes")),
+            new ConfidenceSummary(0.81, true),
+            List.of()
+        );
+        when(recognitionServiceClient.analyzeImage("flow", file)).thenReturn(diagramAnalysis);
 
-        assertThatThrownBy(() -> designAnalysisService.analyzeImage("flow", file))
-            .isInstanceOf(FeatureNotReadyException.class)
-            .hasMessage("Image recognition pipeline is not implemented yet");
+        AnalysisResponse response = designAnalysisService.analyzeImage("flow", file);
+
+        assertThat(response.diagramAnalysis()).isEqualTo(diagramAnalysis);
+        assertThat(response.riskFindings()).isEmpty();
+        verify(recognitionServiceClient).analyzeImage("flow", file);
     }
 }

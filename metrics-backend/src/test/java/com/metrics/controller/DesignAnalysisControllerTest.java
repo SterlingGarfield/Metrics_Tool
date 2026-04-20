@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.metrics.exception.FeatureNotReadyException;
 import com.metrics.model.request.StructuredDiagramAnalyzeRequest;
 import com.metrics.model.response.AnalysisResponse;
 import com.metrics.model.response.ConfidenceSummary;
@@ -173,9 +172,17 @@ class DesignAnalysisControllerTest {
     }
 
     @Test
-    void analyzeImageReturnsNotImplementedUntilPipelineIsReady() throws Exception {
-        when(designAnalysisService.analyzeImage(any(), any()))
-            .thenThrow(new FeatureNotReadyException("Image recognition pipeline is not implemented yet"));
+    void analyzeImageReturnsReservedContractFieldsAndDiagramPayload() throws Exception {
+        DiagramAnalysisResponse response = new DiagramAnalysisResponse(
+            "flow",
+            "image",
+            List.of(new DiagramElement("Node", "Approval", "process", 0.91)),
+            List.of(new DiagramRelation("Start", "Approval", "transition", 0.93)),
+            List.of(new DiagramMetricValue("nodeCount", 7.0, "count", "Detected flow nodes")),
+            new ConfidenceSummary(0.88, true),
+            List.of(new RecognitionIssue("info", "PIPELINE_OK", "Image recognition completed"))
+        );
+        when(designAnalysisService.analyzeImage(any(), any())).thenReturn(AnalysisResponse.withDiagramAnalysis(response));
 
         MockMultipartFile file = new MockMultipartFile(
             "file",
@@ -193,9 +200,15 @@ class DesignAnalysisControllerTest {
         mockMvc.perform(multipart("/api/design/analyze/image")
                 .file(file)
                 .file(diagramType))
-            .andExpect(status().isNotImplemented())
-            .andExpect(jsonPath("$.service").value("diagram-recognition"))
-            .andExpect(jsonPath("$.status").value("NOT_IMPLEMENTED"))
-            .andExpect(jsonPath("$.message").value("Image recognition pipeline is not implemented yet"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.codeMetrics").hasJsonPath())
+            .andExpect(jsonPath("$.diagramAnalysis").hasJsonPath())
+            .andExpect(jsonPath("$.projectEstimation").hasJsonPath())
+            .andExpect(jsonPath("$.riskFindings").isArray())
+            .andExpect(jsonPath("$.diagramAnalysis.diagramType").value("flow"))
+            .andExpect(jsonPath("$.diagramAnalysis.sourceType").value("image"))
+            .andExpect(jsonPath("$.diagramAnalysis.metrics[0].name").value("nodeCount"))
+            .andExpect(jsonPath("$.diagramAnalysis.confidence.overall").value(0.88))
+            .andExpect(jsonPath("$.diagramAnalysis.issues[0].code").value("PIPELINE_OK"));
     }
 }

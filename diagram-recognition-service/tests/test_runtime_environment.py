@@ -23,6 +23,15 @@ def test_current_site_packages_uses_active_interpreter_path(monkeypatch):
     assert site_packages == Path(fake_interpreter).parent / "Lib" / "site-packages"
 
 
+def test_current_site_packages_normalizes_scripts_interpreter_path(monkeypatch):
+    fake_interpreter = r"D:\active\Scripts\python.exe"
+    monkeypatch.setattr(runtime_validator.sys, "executable", fake_interpreter)
+
+    site_packages = runtime_validator.current_site_packages()
+
+    assert site_packages == Path(r"D:\active") / "Lib" / "site-packages"
+
+
 def test_runtime_site_packages_only_uses_active_interpreter_site_packages(monkeypatch):
     fake_interpreter = r"D:\active\python.exe"
     active_site_packages = Path(fake_interpreter).parent / "Lib" / "site-packages"

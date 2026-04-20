@@ -81,7 +81,9 @@ body {
 }
 
 textarea,
-input[type='file'] {
+input[type='file'],
+input[type='number'],
+select {
   width: 100%;
   border-radius: 16px;
   border: 1px solid var(--line);
@@ -140,4 +142,32 @@ textarea {
 
 .status-banner.error {
   background: rgba(196, 91, 45, 0.18);
+}
+
+.two-column-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.estimation-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.result-box {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.result-box pre {
+  max-height: 320px;
+  overflow: auto;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
 }

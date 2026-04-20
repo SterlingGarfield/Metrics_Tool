@@ -21,8 +21,11 @@ class RuntimeDiagnostics:
 
 
 def current_site_packages(python_executable: str | None = None) -> Path:
-    interpreter = python_executable or sys.executable
-    return Path(interpreter).expanduser().parent / "Lib" / "site-packages"
+    interpreter = Path(python_executable or sys.executable).expanduser()
+    env_root = interpreter.parent
+    if env_root.name.lower() in {"scripts", "bin"}:
+        env_root = env_root.parent
+    return env_root / "Lib" / "site-packages"
 
 
 def collect_runtime_diagnostics() -> RuntimeDiagnostics:
