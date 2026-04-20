@@ -56,7 +56,7 @@ classDiagram
 - code source: Java text, `.java` files, folder tree
 - structured diagram source: `.puml`, `.mmd`
 - image diagram source: `.png`, `.jpg`, `.jpeg`
-- estimation input: diagram type, LoC, class count, relationship count, use case count, decision node count, cost rate, target schedule
+- estimation input: diagram type, LoC, class count, relationship count, use case count, decision node count, optional standard UCP fields (actor/use case complexity buckets + TCF + EF), cost rate, target schedule
 
 ## Output Data Requirements
 
@@ -64,4 +64,3 @@ classDiagram
 - diagram metrics: class/flow/usecase metric vocabulary
 - confidence and issue payload for recognition transparency
 - project entity indicators: workload, cost, schedule, staffing
-

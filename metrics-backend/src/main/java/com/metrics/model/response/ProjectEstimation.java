@@ -5,5 +5,6 @@ public record ProjectEstimation(
     Double cost,
     Double scheduleMonths,
     Integer suggestedStaffing,
-    EstimationBasis basis
+    EstimationBasis basis,
+    UcpBreakdown ucpBreakdown
 ) {}

@@ -68,4 +68,10 @@
 - scheduleMonths
 - suggestedStaffing
 - basis.summary / basis.details
-
+- ucpBreakdown.standardInputUsed
+- ucpBreakdown.simpleActorCount / averageActorCount / complexActorCount
+- ucpBreakdown.simpleUseCaseCount / averageUseCaseCount / complexUseCaseCount
+- ucpBreakdown.uaw / uucw / uucp
+- ucpBreakdown.technicalComplexityFactor / environmentalFactor
+- ucpBreakdown.ucp
+- ucpBreakdown.workloadPersonMonths

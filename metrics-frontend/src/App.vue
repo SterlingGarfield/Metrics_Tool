@@ -98,6 +98,30 @@
         <label for="estimate-decisions">Decision Node Count</label>
         <input id="estimate-decisions" type="number" min="0" v-model.number="estimateForm.decisionNodeCount" />
 
+        <label for="estimate-simple-actors">Simple Actor Count (Optional)</label>
+        <input id="estimate-simple-actors" type="number" min="0" v-model.number="estimateForm.simpleActorCount" />
+
+        <label for="estimate-average-actors">Average Actor Count (Optional)</label>
+        <input id="estimate-average-actors" type="number" min="0" v-model.number="estimateForm.averageActorCount" />
+
+        <label for="estimate-complex-actors">Complex Actor Count (Optional)</label>
+        <input id="estimate-complex-actors" type="number" min="0" v-model.number="estimateForm.complexActorCount" />
+
+        <label for="estimate-simple-usecases">Simple Use Case Count (Optional)</label>
+        <input id="estimate-simple-usecases" type="number" min="0" v-model.number="estimateForm.simpleUseCaseCount" />
+
+        <label for="estimate-average-usecases">Average Use Case Count (Optional)</label>
+        <input id="estimate-average-usecases" type="number" min="0" v-model.number="estimateForm.averageUseCaseCount" />
+
+        <label for="estimate-complex-usecases">Complex Use Case Count (Optional)</label>
+        <input id="estimate-complex-usecases" type="number" min="0" v-model.number="estimateForm.complexUseCaseCount" />
+
+        <label for="estimate-tcf">Technical Complexity Factor (Optional)</label>
+        <input id="estimate-tcf" type="number" min="0.6" max="1.4" step="0.01" v-model.number="estimateForm.technicalComplexityFactor" />
+
+        <label for="estimate-ef">Environmental Factor (Optional)</label>
+        <input id="estimate-ef" type="number" min="0.6" max="1.4" step="0.01" v-model.number="estimateForm.environmentalFactor" />
+
         <label for="estimate-cost-rate">Cost Rate / Person-Month</label>
         <input id="estimate-cost-rate" type="number" min="1" v-model.number="estimateForm.costRatePerPersonMonth" />
 
@@ -159,6 +183,14 @@ const estimateForm = ref({
   relationshipCount: null,
   useCaseCount: null,
   decisionNodeCount: null,
+  simpleActorCount: null,
+  averageActorCount: null,
+  complexActorCount: null,
+  simpleUseCaseCount: null,
+  averageUseCaseCount: null,
+  complexUseCaseCount: null,
+  technicalComplexityFactor: null,
+  environmentalFactor: null,
   costRatePerPersonMonth: 15000,
   targetScheduleMonths: 2
 })

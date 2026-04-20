@@ -62,7 +62,8 @@ class EstimationControllerTest {
             new EstimationBasis(
                 "Heuristic blend of code and diagram complexity.",
                 "Uses totalLoc, classCount, relationshipCount, useCaseCount, and decisionNodeCount."
-            )
+            ),
+            null
         );
         when(estimationService.estimate(any())).thenReturn(estimation);
 
