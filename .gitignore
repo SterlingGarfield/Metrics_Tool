@@ -11,6 +11,8 @@ diagram-recognition-service/.pytest-tmp/
 diagram-recognition-service/._pytest_tmp/
 diagram-recognition-service/temp-root/
 diagram-recognition-service/tmp/
+diagram-recognition-service/pytest-run-models-status/
+diagram-recognition-service/pytest-run-models-status-2/
 **/__pycache__/
 *.pyc
 .pytest_cache/

@@ -1,6 +1,7 @@
 package com.metrics.service;
 
 import com.metrics.model.request.EstimateProjectRequest;
+import com.metrics.model.DiagramType;
 import com.metrics.model.response.EstimationBasis;
 import com.metrics.model.response.ProjectEstimation;
 import java.util.Locale;
@@ -13,36 +14,54 @@ public class EstimationService {
         double workloadPersonMonths = round2(computeWorkload(request));
         double costRate = request.costRatePerPersonMonth() == null ? 15000.0 : request.costRatePerPersonMonth();
         double scheduleMonths = request.targetScheduleMonths() == null
-            ? Math.max(1.0, round2(workloadPersonMonths / 2.0))
+            ? inferSchedule(workloadPersonMonths)
             : request.targetScheduleMonths();
         int suggestedStaffing = Math.max(1, (int) Math.ceil(workloadPersonMonths / Math.max(1.0, scheduleMonths)));
         double cost = round2(workloadPersonMonths * costRate);
 
+        double diagramMultiplier = diagramMultiplier(request.diagramType());
         String basisDetails = String.format(
             Locale.ROOT,
-            "Stub inputs: totalLoc=%d, classCount=%d, relationshipCount=%d, useCaseCount=%d, decisionNodeCount=%d, costRate=%.2f, targetSchedule=%s.",
+            "Inputs: totalLoc=%d, classCount=%d, relationshipCount=%d, useCaseCount=%d, decisionNodeCount=%d, diagramType=%s, diagramMultiplier=%.2f, costRate=%.2f, targetSchedule=%s.",
             safeInt(request.totalLoc()),
             safeInt(request.classCount()),
             safeInt(request.relationshipCount()),
             safeInt(request.useCaseCount()),
             safeInt(request.decisionNodeCount()),
+            request.diagramType().value(),
+            diagramMultiplier,
             costRate,
             request.targetScheduleMonths() == null ? "auto" : String.format(Locale.ROOT, "%.2f", request.targetScheduleMonths())
         );
         EstimationBasis basis = new EstimationBasis(
-            "Backend-local estimation boundary for Task 1 contract wiring.",
+            "Heuristic blend of code size, OO coupling, and diagram complexity.",
             basisDetails
         );
         return new ProjectEstimation(workloadPersonMonths, cost, scheduleMonths, suggestedStaffing, basis);
     }
 
     private double computeWorkload(EstimateProjectRequest request) {
-        double locFactor = safeInt(request.totalLoc()) / 1200.0;
-        double classFactor = safeInt(request.classCount()) * 0.08;
-        double diagramFactor = safeInt(request.relationshipCount()) * 0.03
+        double locFactor = safeInt(request.totalLoc()) / 1100.0;
+        double classFactor = safeInt(request.classCount()) * 0.07;
+        double couplingFactor = safeInt(request.relationshipCount()) * 0.035;
+        double diagramFactor = safeInt(request.relationshipCount()) * 0.015
             + safeInt(request.useCaseCount()) * 0.12
             + safeInt(request.decisionNodeCount()) * 0.06;
-        return Math.max(0.5, locFactor + classFactor + diagramFactor);
+        double workload = (locFactor + classFactor + couplingFactor + diagramFactor) * diagramMultiplier(request.diagramType());
+        return Math.max(0.5, workload);
+    }
+
+    private double diagramMultiplier(DiagramType diagramType) {
+        return switch (diagramType) {
+            case CLASS -> 1.0;
+            case FLOW -> 1.08;
+            case USECASE -> 1.12;
+        };
+    }
+
+    private double inferSchedule(double workloadPersonMonths) {
+        double inferred = 0.85 * Math.pow(Math.max(workloadPersonMonths, 0.5), 0.38) + 0.8;
+        return round2(Math.max(1.0, inferred));
     }
 
     private int safeInt(Integer value) {

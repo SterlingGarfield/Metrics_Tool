@@ -43,15 +43,21 @@ public record CodeMetricsResult(
     ) {
         Integer classCount = projectSummary != null ? projectSummary.totalClasses() : classMetrics.size();
         Integer methodCount = projectSummary != null ? projectSummary.totalMethods() : methodMetrics.size();
-        Integer attributeCount = classMetrics.isEmpty()
-            ? null
-            : classMetrics.stream().mapToInt(ClassMetrics::noa).sum();
+        Integer attributeCount = classMetrics.stream().mapToInt(ClassMetrics::noa).sum();
+        Integer relationshipCount = classMetrics.stream().mapToInt(ClassMetrics::cbo).sum();
         Double averageMethodsPerClass = classCount == null || classCount == 0
             ? null
             : (double) methodCount / classCount;
-        Double averageAttributesPerClass = classCount == null || classCount == 0 || attributeCount == null
+        Double averageAttributesPerClass = classCount == null || classCount == 0
             ? null
             : (double) attributeCount / classCount;
+        Double relationDensity = null;
+        if (classCount != null && classCount > 1) {
+            double denominator = (double) classCount * (classCount - 1);
+            relationDensity = round3(relationshipCount / denominator);
+        } else if (classCount != null && classCount == 1) {
+            relationDensity = 0.0;
+        }
         List<Integer> inheritanceDepthDistribution = classMetrics.stream()
             .map(ClassMetrics::dit)
             .sorted()
@@ -61,12 +67,16 @@ public record CodeMetricsResult(
             classCount,
             methodCount,
             attributeCount,
-            null,
+            relationshipCount,
             averageMethodsPerClass,
             averageAttributesPerClass,
-            null,
+            relationDensity,
             inheritanceDepthDistribution
         );
+    }
+
+    private static double round3(double value) {
+        return Math.round(value * 1000.0) / 1000.0;
     }
 
     public record LkPresentation(

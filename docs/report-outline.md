@@ -1,30 +1,48 @@
 # Report Outline
 
-## 1. Requirement Analysis
+## 1. Project Requirement Analysis
 
-- software metrics automation tool goals
-- functional, data, and non-functional requirements
+- Explain how metric models and tool interfaces are used to realize software metrics automation.
+- Functional requirements:
+  - code metrics
+  - structured diagram metrics
+  - image diagram recognition metrics
+  - project estimation outputs
+- Data requirements:
+  - contract entities and metric payload structures
+  - input/output data definitions
+- Non-functional requirements:
+  - local deployment
+  - reproducibility
+  - reliability and usability
 
 ## 2. System Design
 
-- frontend and backend architecture
-- AST parsing workflow
-- metric calculation modules
+- Overall architecture (frontend, Java backend, Python recognition service)
+- Key module design and responsibility boundaries
+- UML/data contract description of metric entities
+- Automated measurement workflow and algorithm boundaries
 
 ## 3. Implementation
 
-- key interfaces
-- metric algorithms
-- visualization modules
+- Core interfaces and routing
+- AST-based code analysis implementation
+- Structured parser implementation
+- Image recognition pipeline implementation
+- Estimation method implementation
+- Frontend integration and export functions
 
-## 4. Result Analysis
+## 4. Result Analysis And Evaluation
 
-- sample project metrics
-- accuracy comparison against expected values
-- usability and effectiveness discussion
+- Demonstration on sample code + diagram inputs
+- Comparison between predicted metrics/estimation and practical expectations
+- Accuracy, usability, and effectiveness discussion
+- Identified limitations and confidence caveats
 
-## 5. Improvement Suggestions
+## 5. Improvement Plan
 
-- known limitations
-- next-step metrics
-- future tooling extensions
+- Runtime hardening and dependency reproducibility improvements
+- Metric coverage expansion (optional additional methods)
+- Recognition robustness upgrades and better calibration
+- Future integration and report automation enhancements
+
