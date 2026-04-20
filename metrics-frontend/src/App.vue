@@ -3,13 +3,44 @@
     <section class="hero">
       <p class="eyebrow">Software Quality Assurance</p>
       <h1>Metrics Workbench</h1>
-      <p class="lede">Run Java metrics, diagram recognition, and project estimation in one local workflow.</p>
+      <p class="lede">Run three core course mainlines in one local workflow: code metrics, design diagram metrics, and project estimation.</p>
       <p class="health-status">Code backend: {{ healthStatus }}</p>
       <p class="health-status">Recognition service: {{ recognitionStatus }}</p>
     </section>
 
     <section class="panel">
-      <h2>Code Metrics</h2>
+      <h2>Three Mainlines</h2>
+      <div class="mainline-grid">
+        <article class="mainline-card">
+          <h3>Mainline 1: Code Metrics</h3>
+          <p>AST-based software metrics from Java source (project/class/method/risk).</p>
+          <p class="mainline-state">Status: {{ codeTrackStatus }}</p>
+        </article>
+        <article class="mainline-card">
+          <h3>Mainline 2: Design Diagram Metrics</h3>
+          <p>Structured + image diagram analysis with relation recovery and metric extraction.</p>
+          <p class="mainline-state">Status: {{ diagramTrackStatus }}</p>
+        </article>
+        <article class="mainline-card">
+          <h3>Mainline 3: Project Estimation</h3>
+          <p>Heuristic + optional standard UCP estimation with workload, cost, schedule, and staffing.</p>
+          <p class="mainline-state">Status: {{ estimationTrackStatus }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Unified Export</h2>
+      <p class="lede">Export a combined report across all available mainline results.</p>
+      <div class="action-row">
+        <button type="button" class="primary-button" :disabled="!hasAnyTrackData" @click="downloadCsv">Export CSV</button>
+        <button type="button" class="primary-button" :disabled="!hasAnyTrackData" @click="downloadMarkdown">Export Markdown</button>
+      </div>
+      <p v-if="!hasAnyTrackData" class="status-banner">Run at least one mainline to enable export.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Mainline 1: Code Metrics</h2>
       <InputWorkspace
         @submit-text="handleSubmitText"
         @submit-file="handleSubmitFile"
@@ -22,10 +53,6 @@
 
     <template v-if="result">
       <OverviewCards :summary="result.projectSummary" />
-      <div class="action-row">
-        <button type="button" class="primary-button" @click="downloadCsv">Export CSV</button>
-        <button type="button" class="primary-button" @click="downloadMarkdown">Export Markdown</button>
-      </div>
       <MetricsCharts :method-metrics="result.methodMetrics" />
       <MetricsTables :class-metrics="result.classMetrics" :method-metrics="result.methodMetrics" />
       <RiskPanel :risk-findings="result.riskFindings" />
@@ -33,7 +60,7 @@
     </template>
 
     <section class="panel">
-      <h2>Diagram Analysis</h2>
+      <h2>Mainline 2: Design Diagram Metrics</h2>
       <div class="two-column-grid">
         <form class="pane" @submit.prevent="runStructured">
           <h3>Structured Input</h3>
@@ -74,7 +101,7 @@
     </section>
 
     <section class="panel">
-      <h2>Project Estimation</h2>
+      <h2>Mainline 3: Project Estimation</h2>
       <form class="estimation-grid" @submit.prevent="runEstimation">
         <label for="estimate-diagram-type">Diagram Type</label>
         <select id="estimate-diagram-type" v-model="estimateForm.diagramType">
@@ -143,7 +170,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
   analyzeImageDiagram,
   analyzeStructuredDiagram,
@@ -193,6 +220,26 @@ const estimateForm = ref({
   environmentalFactor: null,
   costRatePerPersonMonth: 15000,
   targetScheduleMonths: 2
+})
+
+const hasAnyTrackData = computed(() => !!(result.value || diagramResult.value || estimationResult.value))
+const codeTrackStatus = computed(() => {
+  if (loading.value) {
+    return 'running'
+  }
+  return result.value ? 'ready' : 'idle'
+})
+const diagramTrackStatus = computed(() => {
+  if (diagramLoading.value) {
+    return 'running'
+  }
+  return diagramResult.value ? 'ready' : 'idle'
+})
+const estimationTrackStatus = computed(() => {
+  if (estimationLoading.value) {
+    return 'running'
+  }
+  return estimationResult.value ? 'ready' : 'idle'
 })
 
 onMounted(async () => {
@@ -319,10 +366,32 @@ function downloadBlob(filename, content, type) {
 }
 
 function downloadCsv() {
-  downloadBlob('metrics-report.csv', buildCsv(result.value), 'text/csv')
+  if (!hasAnyTrackData.value) {
+    return
+  }
+  downloadBlob(
+    'metrics-report.csv',
+    buildCsv({
+      codeResult: result.value,
+      diagramResult: diagramResult.value,
+      estimationResult: estimationResult.value
+    }),
+    'text/csv'
+  )
 }
 
 function downloadMarkdown() {
-  downloadBlob('metrics-report.md', buildMarkdownReport(result.value), 'text/markdown')
+  if (!hasAnyTrackData.value) {
+    return
+  }
+  downloadBlob(
+    'metrics-report.md',
+    buildMarkdownReport({
+      codeResult: result.value,
+      diagramResult: diagramResult.value,
+      estimationResult: estimationResult.value
+    }),
+    'text/markdown'
+  )
 }
 </script>

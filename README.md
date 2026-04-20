@@ -2,6 +2,14 @@
 
 [中文说明](README.zh-CN.md)
 
+## Core Mainlines
+
+The course project is explicitly converged to three mainlines:
+
+- code metrics
+- design diagram metrics
+- project estimation
+
 ## Environment
 
 - JDK 17

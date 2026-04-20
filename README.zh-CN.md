@@ -2,6 +2,14 @@
 
 [English README](README.md)
 
+## 三条主线
+
+课程项目能力明确收敛为三条主线：
+
+- 代码度量
+- 设计图度量
+- 项目估算
+
 ## 概览
 
 本项目是一个软件度量与设计图分析的综合工具，包含：
@@ -105,4 +113,3 @@ powershell -ExecutionPolicy Bypass -File .\scripts\smoke-demo.ps1
   - 后端配置：`metrics-backend/src/main/resources/application.yml` 中的 `recognition.model-cache-path`
   - 识别服务配置：环境变量 `METRICS_TOOL_MODEL_CACHE`（未设置时会使用默认路径）
   - 如果你将仓库放在非 `D:/Projects/SQA/Metrics_Tool` 路径下，建议显式设置 `METRICS_TOOL_MODEL_CACHE` 并调整后端配置。
-
