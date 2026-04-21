@@ -1,23 +1,25 @@
 <template>
   <main class="app-shell">
-    <section class="hero">
-      <p class="eyebrow">Software Quality Assurance</p>
-      <h1>Java Metrics Tool</h1>
-      <p class="lede">Analyze Java code, inspect CK metrics, and export report-ready results for your course project.</p>
-      <p class="health-status">Backend status: {{ healthStatus }}</p>
+    <AppHeader :health-status="healthStatus" />
+    <HeroSection @start="focusAnalysisWorkspace" />
+
+    <section :class="result ? 'workspace-stack' : 'workspace-layout'">
+      <div ref="workspaceRegion" class="workspace-column" tabindex="-1">
+        <InputWorkspace
+          @submit-text="runTextAnalysis"
+          @submit-file="runFileAnalysis"
+          @submit-files="runFileAnalysis"
+          @submit-folder="runFolderAnalysis"
+        />
+
+        <p v-if="loading" class="status-banner">Analyzing source set...</p>
+        <p v-if="error" class="status-banner error">{{ error }}</p>
+      </div>
+
+      <EmptyStatePanel v-if="!result" />
     </section>
 
-    <InputWorkspace
-      @submit-text="runTextAnalysis"
-      @submit-file="runFileAnalysis"
-      @submit-files="runFileAnalysis"
-      @submit-folder="runFolderAnalysis"
-    />
-
-    <p v-if="loading" class="status-banner">Analyzing source set...</p>
-    <p v-if="error" class="status-banner error">{{ error }}</p>
-
-    <template v-if="result">
+    <section v-if="result" class="results-shell">
       <OverviewCards :summary="result.projectSummary" />
       <div class="action-row">
         <button type="button" class="primary-button" @click="downloadCsv">Export CSV</button>
@@ -27,13 +29,16 @@
       <MetricsTables :class-metrics="result.classMetrics" :method-metrics="result.methodMetrics" />
       <RiskPanel :risk-findings="result.riskFindings" />
       <MetricInfoDrawer />
-    </template>
+    </section>
   </main>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import { checkHealth } from './api/metrics'
+import AppHeader from './components/AppHeader.vue'
+import EmptyStatePanel from './components/EmptyStatePanel.vue'
+import HeroSection from './components/HeroSection.vue'
 import InputWorkspace from './components/InputWorkspace.vue'
 import MetricInfoDrawer from './components/MetricInfoDrawer.vue'
 import MetricsCharts from './components/MetricsCharts.vue'
@@ -44,6 +49,7 @@ import { useAnalysis } from './composables/useAnalysis'
 import { buildCsv, buildMarkdownReport } from './utils/exporters'
 
 const healthStatus = ref('checking')
+const workspaceRegion = ref(null)
 const { loading, result, error, runTextAnalysis, runFileAnalysis, runFolderAnalysis } = useAnalysis()
 
 onMounted(async () => {
@@ -54,6 +60,16 @@ onMounted(async () => {
     healthStatus.value = 'UNAVAILABLE'
   }
 })
+
+async function focusAnalysisWorkspace() {
+  await nextTick()
+
+  workspaceRegion.value?.focus()
+  if (typeof workspaceRegion.value?.scrollIntoView === 'function') {
+    workspaceRegion.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  workspaceRegion.value?.querySelector('textarea, input[type="file"]')?.focus()
+}
 
 function downloadBlob(filename, content, type) {
   const blob = new Blob([content], { type })
