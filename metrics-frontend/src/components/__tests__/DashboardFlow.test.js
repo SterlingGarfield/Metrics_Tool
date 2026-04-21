@@ -55,13 +55,24 @@ vi.mock('../../api/metrics', () => ({
   analyzeFolder: vi.fn()
 }))
 
-test('renders overview cards after analysis completes', async () => {
+test('renders the branded homepage before analysis starts', async () => {
   render(App)
 
-  await fireEvent.update(screen.getByLabelText('Java Source'), 'public class Demo { void go() {} }')
-  await fireEvent.click(screen.getByRole('button', { name: 'Analyze Text' }))
+  expect(screen.getByText('Java 度量分析平台')).toBeInTheDocument()
+  expect(screen.getByText('暗色可视化代码度量与风险洞察')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '开始分析' })).toBeInTheDocument()
+  expect(screen.getByText('支持代码输入、单文件、多文件与文件夹扫描')).toBeInTheDocument()
+})
 
-  expect(await screen.findByText('Files')).toBeInTheDocument()
-  expect(await screen.findByText('Methods')).toBeInTheDocument()
-  expect(await screen.findByText('Export CSV')).toBeInTheDocument()
+test('shows the new results hierarchy after text analysis completes', async () => {
+  render(App)
+
+  await fireEvent.click(screen.getByRole('button', { name: '开始分析' }))
+  await fireEvent.update(await screen.findByLabelText('Java 源码输入区'), 'public class Demo { void go() {} }')
+  await fireEvent.click(screen.getByRole('button', { name: '开始分析任务' }))
+
+  expect(await screen.findByText('本次分析概览')).toBeInTheDocument()
+  expect(await screen.findByText('风险焦点')).toBeInTheDocument()
+  expect(await screen.findByText('复杂度趋势')).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: '导出 CSV' })).toBeInTheDocument()
 })
