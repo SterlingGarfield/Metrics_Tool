@@ -49,6 +49,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\dev.ps1
 - project estimation:
   - `POST /api/estimate/project`
 
+Project estimation now supports both `ucp` and `function_point` paths. See `docs/estimation-method.md` for formulas and traceability fields.
+
 ## Test Commands
 
 ### Python recognition service
@@ -78,3 +80,9 @@ npm run test -- --run src/components/__tests__/InputWorkspace.test.js src/compon
 powershell -ExecutionPolicy Bypass -File .\scripts\build-demo.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\run-demo.ps1
 ```
+
+## Course Defense References
+
+- Course requirement matrix: `docs/course-requirement-matrix.zh-CN.md`
+- LK course alignment mapping: `docs/lk-course-alignment.zh-CN.md`
+- Metric definitions: `docs/metric-definitions.md`

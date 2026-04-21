@@ -6,5 +6,6 @@ public record ProjectEstimation(
     Double scheduleMonths,
     Integer suggestedStaffing,
     EstimationBasis basis,
-    UcpBreakdown ucpBreakdown
+    UcpBreakdown ucpBreakdown,
+    FunctionPointBreakdown functionPointBreakdown
 ) {}

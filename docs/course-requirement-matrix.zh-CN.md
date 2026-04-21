@@ -1,0 +1,20 @@
+# 课程要求对照矩阵（P4）
+
+> 目标：把课程要求 `(1)~(5)` 直接映射到“当前实现 + 可核验证据”，用于答辩与报告引用。
+
+## 对照矩阵
+
+| 课程条款 | 当前实现 | 证据位置（代码 / API） | 证据位置（页面 / 文档 / 测试） | 结论 |
+| --- | --- | --- | --- | --- |
+| 总体要求：开发中小型软件度量自动化工具，覆盖课程主要知识，支持多方法、跨阶段度量 | 已收敛三条主线：代码度量、设计图度量、项目估算；支持从编码阶段到设计阶段再到项目管理指标的贯通 | `metrics-backend/src/main/java/com/metrics/controller/MetricsController.java`<br>`metrics-backend/src/main/java/com/metrics/controller/DesignAnalysisController.java`<br>`metrics-backend/src/main/java/com/metrics/controller/EstimationController.java` | `metrics-frontend/src/App.vue`<br>`README.md`<br>`README.zh-CN.md` | 已达成 |
+| (1) 面向对象度量为主：实现 LK 与 CK 相关度量点，可加入圈复杂度、LoC 等传统度量 | CK 指标：`WMC/CBO/RFC/LCOM/DIT/NOC`；`codeMetrics.lkMetrics` 是 LK 的主契约，`codeMetrics.lkPresentation` 仅作兼容字段；前端表格、图表与导出是围绕该 LK 课程口径构建的展示层；传统指标：方法圈复杂度、方法 LoC、项目 LoC、嵌套深度、分支数 | `metrics-backend/src/main/java/com/metrics/model/response/ClassMetrics.java`<br>`metrics-backend/src/main/java/com/metrics/model/response/MethodMetrics.java`<br>`metrics-backend/src/main/java/com/metrics/model/response/CodeMetricsResult.java`<br>`metrics-backend/src/main/java/com/metrics/analyzer/ClassMetricsAnalyzer.java`<br>`metrics-backend/src/main/java/com/metrics/analyzer/MethodMetricsAnalyzer.java`<br>`metrics-backend/src/main/java/com/metrics/analyzer/ProjectMetricsAnalyzer.java` | `metrics-frontend/src/components/MetricsTables.vue`<br>`metrics-frontend/src/components/MetricsCharts.vue`<br>`docs/metric-definitions.md`<br>`metrics-frontend/src/utils/exporters.js`<br>`metrics-backend/src/test/java/com/metrics/service/MetricsAnalysisServiceTest.java`<br>`metrics-backend/src/test/java/com/metrics/model/response/CodeMetricsResultTest.java` | 已达成（LK 课程口径映射详见 `docs/lk-course-alignment.zh-CN.md`） |
+| (2) 可加入其它度量方法：功能点/特征点/用例度量/复杂性度量等 | 已实现三类“其它方法”：<br>1) UCP（标准输入 + 简化 fallback）<br>2) Function Point<br>3) 设计图度量（类图/流程图/用例图）与复杂性相关分值 | `metrics-backend/src/main/java/com/metrics/service/EstimationService.java`<br>`metrics-backend/src/main/java/com/metrics/model/request/EstimateProjectRequest.java`<br>`diagram-recognition-service/app/services/structured/metric_extractor.py` | `docs/estimation-method.md`<br>`metrics-frontend/src/App.vue`<br>`metrics-backend/src/test/java/com/metrics/service/EstimationServiceBehaviorTest.java` | 已达成（当前已实现 UCP、Function Point 及设计图度量；特征点可作为后续增强） |
+| (3) 度量实体：LoC、工作量、成本、开发时间、人员等 | 已覆盖：`LoC`、`workloadPersonMonths`、`cost`、`scheduleMonths`、`suggestedStaffing` | `metrics-backend/src/main/java/com/metrics/model/response/ProjectSummary.java`<br>`metrics-backend/src/main/java/com/metrics/model/response/ProjectEstimation.java`<br>`metrics-backend/src/main/java/com/metrics/service/EstimationService.java` | `metrics-frontend/src/App.vue`<br>`metrics-frontend/src/utils/exporters.js`<br>`docs/estimation-method.md` | 已达成 |
+| (4) 输入项：类图/流程图/用例图、程序代码、用户输入等 | 代码输入支持 text/file/files/folder；设计图支持 structured/image + `class|flow|usecase`；估算支持用户输入参数（含可选标准 UCP 字段） | `metrics-backend/src/main/java/com/metrics/controller/MetricsController.java`<br>`metrics-backend/src/main/java/com/metrics/controller/DesignAnalysisController.java`<br>`metrics-backend/src/main/java/com/metrics/controller/EstimationController.java` | `metrics-frontend/src/components/InputWorkspace.vue`<br>`metrics-frontend/src/App.vue`<br>`samples/diagram-inputs/`<br>`metrics-backend/src/test/java/com/metrics/controller/DesignAnalysisControllerTest.java`<br>`metrics-backend/src/test/java/com/metrics/controller/EstimationControllerTest.java` | 已达成 |
+| (5) 建议：Java 使用 Eclipse ASTParser 解析 AST 后统计分析 | 代码解析主链路使用 Eclipse JDT `ASTParser`，随后执行方法级、类级、项目级指标聚合 | `metrics-backend/src/main/java/com/metrics/parser/JavaSourceParser.java`<br>`metrics-backend/src/main/java/com/metrics/service/MetricsAnalysisService.java` | `docs/architecture/measurement-workflow.md`<br>`docs/requirements/functional-use-cases.md` | 已达成 |
+
+## 答辩引用建议
+
+1. 先展示三主线入口（`metrics-frontend/src/App.vue`），说明课程覆盖面。  
+2. 再按本矩阵 `(1)~(5)` 顺序展示证据路径，避免“功能点散、论证不闭环”。  
+3. 当被问到 “LK 是否只是展示层” 时，直接引用 `docs/lk-course-alignment.zh-CN.md` 的字段映射与公式。  

@@ -2,6 +2,7 @@ package com.metrics.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.metrics.model.EstimationMethod;
 import com.metrics.model.DiagramType;
 import com.metrics.model.request.EstimateProjectRequest;
 import com.metrics.model.response.ProjectEstimation;
@@ -14,6 +15,7 @@ class EstimationServiceBehaviorTest {
     @Test
     void flowDiagramYieldsHigherWorkloadThanClassForSameInputs() {
         EstimateProjectRequest classRequest = new EstimateProjectRequest(
+            null, // estimationMethod
             DiagramType.CLASS,
             3200,
             18,
@@ -21,17 +23,24 @@ class EstimationServiceBehaviorTest {
             0,
             12,
             15000.0,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
+            null, // targetScheduleMonths
+            null, // simpleActorCount
+            null, // averageActorCount
+            null, // complexActorCount
+            null, // simpleUseCaseCount
+            null, // averageUseCaseCount
+            null, // complexUseCaseCount
+            null, // technicalComplexityFactor
+            null, // environmentalFactor
+            null, // externalInputCount
+            null, // externalOutputCount
+            null, // externalInquiryCount
+            null, // internalLogicalFileCount
+            null, // externalInterfaceFileCount
+            null  // valueAdjustmentFactor
         );
         EstimateProjectRequest flowRequest = new EstimateProjectRequest(
+            null, // estimationMethod
             DiagramType.FLOW,
             3200,
             18,
@@ -39,15 +48,21 @@ class EstimationServiceBehaviorTest {
             0,
             12,
             15000.0,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
+            null, // targetScheduleMonths
+            null, // simpleActorCount
+            null, // averageActorCount
+            null, // complexActorCount
+            null, // simpleUseCaseCount
+            null, // averageUseCaseCount
+            null, // complexUseCaseCount
+            null, // technicalComplexityFactor
+            null, // environmentalFactor
+            null, // externalInputCount
+            null, // externalOutputCount
+            null, // externalInquiryCount
+            null, // internalLogicalFileCount
+            null, // externalInterfaceFileCount
+            null  // valueAdjustmentFactor
         );
 
         ProjectEstimation classEstimation = service.estimate(classRequest);
@@ -62,6 +77,7 @@ class EstimationServiceBehaviorTest {
     @Test
     void standardUcpInputsUseClassicFormulaWhenProvided() {
         EstimateProjectRequest request = new EstimateProjectRequest(
+            null, // estimationMethod
             DiagramType.USECASE,
             2500,
             10,
@@ -69,7 +85,7 @@ class EstimationServiceBehaviorTest {
             9,
             4,
             15000.0,
-            null,
+            null, // targetScheduleMonths
             2,
             3,
             1,
@@ -77,7 +93,13 @@ class EstimationServiceBehaviorTest {
             3,
             1,
             1.05,
-            0.95
+            0.95,
+            null, // externalInputCount
+            null, // externalOutputCount
+            null, // externalInquiryCount
+            null, // internalLogicalFileCount
+            null, // externalInterfaceFileCount
+            null  // valueAdjustmentFactor
         );
 
         ProjectEstimation estimation = service.estimate(request);
@@ -95,11 +117,49 @@ class EstimationServiceBehaviorTest {
     @Test
     void estimationFallsBackToSimplifiedUcpWhenStandardFieldsMissing() {
         EstimateProjectRequest request = new EstimateProjectRequest(
+            null, // estimationMethod
             DiagramType.CLASS,
             3200,
             18,
             26,
             0,
+            12,
+            15000.0,
+            null, // targetScheduleMonths
+            null, // simpleActorCount
+            null, // averageActorCount
+            null, // complexActorCount
+            null, // simpleUseCaseCount
+            null, // averageUseCaseCount
+            null, // complexUseCaseCount
+            null, // technicalComplexityFactor
+            null, // environmentalFactor
+            null, // externalInputCount
+            null, // externalOutputCount
+            null, // externalInquiryCount
+            null, // internalLogicalFileCount
+            null, // externalInterfaceFileCount
+            null  // valueAdjustmentFactor
+        );
+
+        ProjectEstimation estimation = service.estimate(request);
+
+        assertThat(estimation.ucpBreakdown()).isNotNull();
+        assertThat(estimation.ucpBreakdown().standardInputUsed()).isFalse();
+        assertThat(estimation.ucpBreakdown().averageUseCaseCount()).isGreaterThanOrEqualTo(1);
+        assertThat(estimation.ucpBreakdown().ucp()).isGreaterThan(0.0);
+        assertThat(estimation.basis().summary()).contains("simplified UCP");
+    }
+
+    @Test
+    void functionPointMethodUsesDirectCountsWhenRequested() {
+        EstimateProjectRequest request = new EstimateProjectRequest(
+            EstimationMethod.FUNCTION_POINT,
+            DiagramType.CLASS,
+            3200,
+            18,
+            26,
+            7,
             12,
             15000.0,
             null,
@@ -110,15 +170,24 @@ class EstimationServiceBehaviorTest {
             null,
             null,
             null,
-            null
+            null,
+            12,
+            8,
+            5,
+            4,
+            2,
+            1.10
         );
 
         ProjectEstimation estimation = service.estimate(request);
 
-        assertThat(estimation.ucpBreakdown()).isNotNull();
-        assertThat(estimation.ucpBreakdown().standardInputUsed()).isFalse();
-        assertThat(estimation.ucpBreakdown().averageUseCaseCount()).isGreaterThanOrEqualTo(1);
-        assertThat(estimation.ucpBreakdown().ucp()).isGreaterThan(0.0);
-        assertThat(estimation.basis().summary()).contains("simplified UCP");
+        assertThat(estimation.ucpBreakdown()).isNull();
+        assertThat(estimation.functionPointBreakdown()).isNotNull();
+        assertThat(estimation.functionPointBreakdown().directInputUsed()).isTrue();
+        assertThat(estimation.functionPointBreakdown().unadjustedFunctionPoints()).isEqualTo(162.0);
+        assertThat(estimation.functionPointBreakdown().adjustedFunctionPoints()).isEqualTo(178.2);
+        assertThat(estimation.functionPointBreakdown().workloadPersonMonths()).isEqualTo(14.85);
+        assertThat(estimation.workloadPersonMonths()).isEqualTo(14.85);
+        assertThat(estimation.basis().summary()).contains("Function Point");
     }
 }

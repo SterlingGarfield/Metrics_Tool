@@ -74,6 +74,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\dev.ps1
 - 项目估算：
   - `POST /api/estimate/project`
 
+项目估算现已支持 `ucp` 与 `function_point` 两条路径，公式与可追溯字段见 `docs/estimation-method.md`。
+
 ## 测试命令
 
 ### Python（识别服务）
@@ -113,3 +115,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\smoke-demo.ps1
   - 后端配置：`metrics-backend/src/main/resources/application.yml` 中的 `recognition.model-cache-path`
   - 识别服务配置：环境变量 `METRICS_TOOL_MODEL_CACHE`（未设置时会使用默认路径）
   - 如果你将仓库放在非 `D:/Projects/SQA/Metrics_Tool` 路径下，建议显式设置 `METRICS_TOOL_MODEL_CACHE` 并调整后端配置。
+
+## 课程答辩与报告入口
+
+- 答辩演示手册：`docs/course-defense-demo.zh-CN.md`
+- 课程证据索引：`docs/course-evidence-index.zh-CN.md`
+- 课程要求对照矩阵：`docs/course-requirement-matrix.zh-CN.md`
+- LK 课程口径映射：`docs/lk-course-alignment.zh-CN.md`
+- 指标定义与公式：`docs/metric-definitions.md`
+- 项目估算方法：`docs/estimation-method.md`

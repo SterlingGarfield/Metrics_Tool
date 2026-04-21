@@ -19,6 +19,10 @@ function formatValue(value) {
   return String(value)
 }
 
+function getLkMetrics(codeResult) {
+  return codeResult?.codeMetrics?.lkMetrics || codeResult?.codeMetrics?.lkPresentation || null
+}
+
 export function buildCsv(snapshot) {
   const codeResult = snapshot?.codeResult || null
   const diagramResult = snapshot?.diagramResult || null
@@ -32,6 +36,22 @@ export function buildCsv(snapshot) {
     rows.push(['codeMetrics', 'classes', formatValue(summary.totalClasses)])
     rows.push(['codeMetrics', 'methods', formatValue(summary.totalMethods)])
     rows.push(['codeMetrics', 'loc', formatValue(summary.totalLoc)])
+  }
+
+  const lk = getLkMetrics(codeResult)
+  if (lk) {
+    rows.push(['codeMetrics.lk', 'classCount', formatValue(lk.classCount)])
+    rows.push(['codeMetrics.lk', 'methodCount', formatValue(lk.methodCount)])
+    rows.push(['codeMetrics.lk', 'attributeCount', formatValue(lk.attributeCount)])
+    rows.push(['codeMetrics.lk', 'relationshipCount', formatValue(lk.relationshipCount)])
+    rows.push(['codeMetrics.lk', 'averageMethodsPerClass', formatValue(lk.averageMethodsPerClass)])
+    rows.push(['codeMetrics.lk', 'averageAttributesPerClass', formatValue(lk.averageAttributesPerClass)])
+    rows.push(['codeMetrics.lk', 'relationDensity', formatValue(lk.relationDensity)])
+    rows.push([
+      'codeMetrics.lk',
+      'inheritanceDepthDistribution',
+      Array.isArray(lk.inheritanceDepthDistribution) ? JSON.stringify(lk.inheritanceDepthDistribution) : '[]'
+    ])
   }
 
   if (Array.isArray(codeResult?.classMetrics)) {
@@ -75,6 +95,19 @@ export function buildCsv(snapshot) {
       rows.push(['estimation.ucp', 'uucp', formatValue(ucp.uucp)])
       rows.push(['estimation.ucp', 'ucp', formatValue(ucp.ucp)])
     }
+
+    const fp = estimationResult.functionPointBreakdown
+    if (fp) {
+      rows.push(['estimation.fp', 'directInputUsed', formatValue(fp.directInputUsed)])
+      rows.push(['estimation.fp', 'externalInputCount', formatValue(fp.externalInputCount)])
+      rows.push(['estimation.fp', 'externalOutputCount', formatValue(fp.externalOutputCount)])
+      rows.push(['estimation.fp', 'externalInquiryCount', formatValue(fp.externalInquiryCount)])
+      rows.push(['estimation.fp', 'internalLogicalFileCount', formatValue(fp.internalLogicalFileCount)])
+      rows.push(['estimation.fp', 'externalInterfaceFileCount', formatValue(fp.externalInterfaceFileCount)])
+      rows.push(['estimation.fp', 'unadjustedFunctionPoints', formatValue(fp.unadjustedFunctionPoints)])
+      rows.push(['estimation.fp', 'valueAdjustmentFactor', formatValue(fp.valueAdjustmentFactor)])
+      rows.push(['estimation.fp', 'adjustedFunctionPoints', formatValue(fp.adjustedFunctionPoints)])
+    }
   }
 
   return rows.map((row) => row.map(quoteCsv).join(',')).join('\n')
@@ -100,6 +133,20 @@ export function buildMarkdownReport(snapshot) {
     lines.push('')
     lines.push('### Risk Findings')
     lines.push(...riskLines)
+
+    const lk = getLkMetrics(codeResult)
+    if (lk) {
+      lines.push('')
+      lines.push('### LK Course-Aligned View')
+      lines.push(`- Class Count: ${formatValue(lk.classCount)}`)
+      lines.push(`- Method Count: ${formatValue(lk.methodCount)}`)
+      lines.push(`- Attribute Count: ${formatValue(lk.attributeCount)}`)
+      lines.push(`- Relationship Count: ${formatValue(lk.relationshipCount)}`)
+      lines.push(`- Average Methods Per Class: ${formatValue(lk.averageMethodsPerClass)}`)
+      lines.push(`- Average Attributes Per Class: ${formatValue(lk.averageAttributesPerClass)}`)
+      lines.push(`- Relationship Density: ${formatValue(lk.relationDensity)}`)
+      lines.push(`- Inheritance Depth Distribution: ${JSON.stringify(lk.inheritanceDepthDistribution || [])}`)
+    }
   } else {
     lines.push('- No code metrics run in this report.')
   }
@@ -140,6 +187,20 @@ export function buildMarkdownReport(snapshot) {
       lines.push(`- UUCW: ${formatValue(ucp.uucw)}`)
       lines.push(`- UUCP: ${formatValue(ucp.uucp)}`)
       lines.push(`- UCP: ${formatValue(ucp.ucp)}`)
+    }
+    if (estimationResult.functionPointBreakdown) {
+      const fp = estimationResult.functionPointBreakdown
+      lines.push('')
+      lines.push('### Function Point Breakdown')
+      lines.push(`- Direct Input Used: ${formatValue(fp.directInputUsed)}`)
+      lines.push(`- External Inputs: ${formatValue(fp.externalInputCount)}`)
+      lines.push(`- External Outputs: ${formatValue(fp.externalOutputCount)}`)
+      lines.push(`- External Inquiries: ${formatValue(fp.externalInquiryCount)}`)
+      lines.push(`- Internal Logical Files: ${formatValue(fp.internalLogicalFileCount)}`)
+      lines.push(`- External Interface Files: ${formatValue(fp.externalInterfaceFileCount)}`)
+      lines.push(`- Unadjusted Function Points: ${formatValue(fp.unadjustedFunctionPoints)}`)
+      lines.push(`- Value Adjustment Factor: ${formatValue(fp.valueAdjustmentFactor)}`)
+      lines.push(`- Adjusted Function Points: ${formatValue(fp.adjustedFunctionPoints)}`)
     }
   } else {
     lines.push('- No project estimation run in this report.')

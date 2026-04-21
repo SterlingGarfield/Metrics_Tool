@@ -1,171 +1,211 @@
 <template>
   <main class="app-shell">
-    <section class="hero">
-      <p class="eyebrow">Software Quality Assurance</p>
-      <h1>Metrics Workbench</h1>
-      <p class="lede">Run three core course mainlines in one local workflow: code metrics, design diagram metrics, and project estimation.</p>
-      <p class="health-status">Code backend: {{ healthStatus }}</p>
-      <p class="health-status">Recognition service: {{ recognitionStatus }}</p>
-    </section>
-
-    <section class="panel">
-      <h2>Three Mainlines</h2>
-      <div class="mainline-grid">
-        <article class="mainline-card">
-          <h3>Mainline 1: Code Metrics</h3>
-          <p>AST-based software metrics from Java source (project/class/method/risk).</p>
-          <p class="mainline-state">Status: {{ codeTrackStatus }}</p>
-        </article>
-        <article class="mainline-card">
-          <h3>Mainline 2: Design Diagram Metrics</h3>
-          <p>Structured + image diagram analysis with relation recovery and metric extraction.</p>
-          <p class="mainline-state">Status: {{ diagramTrackStatus }}</p>
-        </article>
-        <article class="mainline-card">
-          <h3>Mainline 3: Project Estimation</h3>
-          <p>Heuristic + optional standard UCP estimation with workload, cost, schedule, and staffing.</p>
-          <p class="mainline-state">Status: {{ estimationTrackStatus }}</p>
-        </article>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-kicker">本地化分析流程</span>
+        <strong>软件度量工作台</strong>
       </div>
-    </section>
+      <nav class="section-nav" aria-label="顶层导航">
+        <a href="#overview">产品概览</a>
+        <a href="#code-metrics">代码度量</a>
+        <a href="#diagram-metrics">设计图度量</a>
+        <a href="#estimation">项目估算</a>
+        <a href="#export">报告导出</a>
+      </nav>
+    </header>
 
-    <section class="panel">
-      <h2>Unified Export</h2>
-      <p class="lede">Export a combined report across all available mainline results.</p>
-      <div class="action-row">
-        <button type="button" class="primary-button" :disabled="!hasAnyTrackData" @click="downloadCsv">Export CSV</button>
-        <button type="button" class="primary-button" :disabled="!hasAnyTrackData" @click="downloadMarkdown">Export Markdown</button>
-      </div>
-      <p v-if="!hasAnyTrackData" class="status-banner">Run at least one mainline to enable export.</p>
-    </section>
-
-    <section class="panel">
-      <h2>Mainline 1: Code Metrics</h2>
-      <InputWorkspace
-        @submit-text="handleSubmitText"
-        @submit-file="handleSubmitFile"
-        @submit-files="handleSubmitFile"
-        @submit-folder="handleSubmitFolder"
+    <section id="overview" class="app-section app-section--overview">
+      <ProductHero
+        :backend-status="healthStatus"
+        :recognition-status="recognitionStatus"
       />
-      <p v-if="loading" class="status-banner">Analyzing source set...</p>
-      <p v-if="error" class="status-banner error">{{ error }}</p>
+      <MainlineOverview
+        :code-status="codeTrackStatus"
+        :diagram-status="diagramTrackStatus"
+        :estimation-status="estimationTrackStatus"
+      />
     </section>
 
-    <template v-if="result">
-      <OverviewCards :summary="result.projectSummary" />
-      <MetricsCharts :method-metrics="result.methodMetrics" />
-      <MetricsTables :class-metrics="result.classMetrics" :method-metrics="result.methodMetrics" />
-      <RiskPanel :risk-findings="result.riskFindings" />
-      <MetricInfoDrawer />
-    </template>
+    <section id="workbench" class="app-section app-section--workbench">
+      <WorkbenchIntro @select="handleWorkbenchSelect" />
+    </section>
 
-    <section class="panel">
-      <h2>Mainline 2: Design Diagram Metrics</h2>
-      <div class="two-column-grid">
-        <form class="pane" @submit.prevent="runStructured">
-          <h3>Structured Input</h3>
-          <label for="structured-type">Diagram Type</label>
-          <select id="structured-type" v-model="structuredType">
-            <option value="class">class</option>
-            <option value="flow">flow</option>
-            <option value="usecase">usecase</option>
+    <div class="workbench-stack">
+      <section id="code-metrics" class="panel">
+        <div class="section-heading">
+          <p class="section-kicker">主线一</p>
+          <h2>代码度量</h2>
+        </div>
+        <InputWorkspace
+          @submit-text="handleSubmitText"
+          @submit-file="handleSubmitFile"
+          @submit-files="handleSubmitFile"
+          @submit-folder="handleSubmitFolder"
+        />
+        <p v-if="loading" class="status-banner">正在分析代码集...</p>
+        <p v-if="error" class="status-banner error">{{ error }}</p>
+
+        <template v-if="result">
+          <OverviewCards :summary="result.projectSummary" />
+          <LkMetricsPanel v-if="resolvedLkMetrics" :lk-metrics="resolvedLkMetrics" />
+          <MetricsCharts :method-metrics="result.methodMetrics" />
+          <MetricsTables :class-metrics="result.classMetrics" :method-metrics="result.methodMetrics" />
+          <RiskPanel :risk-findings="result.riskFindings" />
+          <MetricInfoDrawer />
+        </template>
+      </section>
+
+      <section id="diagram-metrics" class="panel">
+        <div class="section-heading">
+          <p class="section-kicker">主线二</p>
+          <h2>设计图度量</h2>
+        </div>
+        <div class="two-column-grid">
+          <form class="pane" @submit.prevent="runStructured">
+            <h3>结构化设计图输入</h3>
+            <label for="structured-type">图类型</label>
+            <select id="structured-type" v-model="structuredType">
+              <option value="class">类图</option>
+              <option value="flow">流程图</option>
+              <option value="usecase">用例图</option>
+            </select>
+            <label for="structured-file">设计图文件（.puml / .mmd）</label>
+            <input id="structured-file" type="file" accept=".puml,.mmd,.txt" @change="onStructuredFileChange" />
+            <button type="submit" class="primary-button" :disabled="diagramLoading">分析结构化设计图</button>
+          </form>
+
+          <form class="pane" @submit.prevent="runImage">
+            <h3>设计图图片输入</h3>
+            <label for="image-type">图类型</label>
+            <select id="image-type" v-model="imageType">
+              <option value="class">类图</option>
+              <option value="flow">流程图</option>
+              <option value="usecase">用例图</option>
+            </select>
+            <label for="image-file">设计图图片（.png / .jpg）</label>
+            <input id="image-file" type="file" accept=".png,.jpg,.jpeg" @change="onImageFileChange" />
+            <button type="submit" class="primary-button" :disabled="diagramLoading">分析设计图图片</button>
+          </form>
+        </div>
+
+        <p v-if="diagramLoading" class="status-banner">正在执行设计图识别...</p>
+        <p v-if="diagramError" class="status-banner error">{{ diagramError }}</p>
+
+        <DiagramResultPanel v-if="diagramResult" :diagram-result="diagramResult" />
+      </section>
+
+      <section id="estimation" class="panel">
+        <div class="section-heading">
+          <p class="section-kicker">主线三</p>
+          <h2>项目估算</h2>
+        </div>
+        <form class="estimation-grid" @submit.prevent="runEstimation">
+          <label for="estimate-method">估算方法</label>
+          <select id="estimate-method" v-model="estimateForm.estimationMethod">
+            <option value="ucp">用例点（UCP）</option>
+            <option value="function_point">功能点（Function Point）</option>
           </select>
-          <label for="structured-file">Diagram File (.puml/.mmd)</label>
-          <input id="structured-file" type="file" accept=".puml,.mmd,.txt" @change="onStructuredFileChange" />
-          <button type="submit" class="primary-button" :disabled="diagramLoading">Analyze Structured Diagram</button>
+
+          <label for="estimate-diagram-type">设计图类型</label>
+          <select id="estimate-diagram-type" v-model="estimateForm.diagramType">
+            <option value="class">类图</option>
+            <option value="flow">流程图</option>
+            <option value="usecase">用例图</option>
+          </select>
+
+          <label for="estimate-loc">总代码行数</label>
+          <input id="estimate-loc" type="number" min="0" v-model.number="estimateForm.totalLoc" />
+
+          <label for="estimate-classes">类数量</label>
+          <input id="estimate-classes" type="number" min="0" v-model.number="estimateForm.classCount" />
+
+          <label for="estimate-relations">关系数量</label>
+          <input id="estimate-relations" type="number" min="0" v-model.number="estimateForm.relationshipCount" />
+
+          <label for="estimate-usecases">用例数量</label>
+          <input id="estimate-usecases" type="number" min="0" v-model.number="estimateForm.useCaseCount" />
+
+          <label for="estimate-decisions">判定节点数量</label>
+          <input id="estimate-decisions" type="number" min="0" v-model.number="estimateForm.decisionNodeCount" />
+
+          <template v-if="estimateForm.estimationMethod === 'ucp'">
+            <label for="estimate-simple-actors">简单参与者数量（可选）</label>
+            <input id="estimate-simple-actors" type="number" min="0" v-model.number="estimateForm.simpleActorCount" />
+
+            <label for="estimate-average-actors">平均参与者数量（可选）</label>
+            <input id="estimate-average-actors" type="number" min="0" v-model.number="estimateForm.averageActorCount" />
+
+            <label for="estimate-complex-actors">复杂参与者数量（可选）</label>
+            <input id="estimate-complex-actors" type="number" min="0" v-model.number="estimateForm.complexActorCount" />
+
+            <label for="estimate-simple-usecases">简单用例数量（可选）</label>
+            <input id="estimate-simple-usecases" type="number" min="0" v-model.number="estimateForm.simpleUseCaseCount" />
+
+            <label for="estimate-average-usecases">平均用例数量（可选）</label>
+            <input id="estimate-average-usecases" type="number" min="0" v-model.number="estimateForm.averageUseCaseCount" />
+
+            <label for="estimate-complex-usecases">复杂用例数量（可选）</label>
+            <input id="estimate-complex-usecases" type="number" min="0" v-model.number="estimateForm.complexUseCaseCount" />
+
+            <label for="estimate-tcf">技术复杂度因子（可选）</label>
+            <input id="estimate-tcf" type="number" min="0.6" max="1.4" step="0.01" v-model.number="estimateForm.technicalComplexityFactor" />
+
+            <label for="estimate-ef">环境因子（可选）</label>
+            <input id="estimate-ef" type="number" min="0.6" max="1.4" step="0.01" v-model.number="estimateForm.environmentalFactor" />
+          </template>
+
+          <template v-else>
+            <p class="status-banner">
+              如果希望后端根据当前项目指标自动推导简化的功能点画像，可以将功能点计数留空。
+            </p>
+
+            <label for="estimate-fp-ei">外部输入数量（可选）</label>
+            <input id="estimate-fp-ei" type="number" min="0" v-model.number="estimateForm.externalInputCount" />
+
+            <label for="estimate-fp-eo">外部输出数量（可选）</label>
+            <input id="estimate-fp-eo" type="number" min="0" v-model.number="estimateForm.externalOutputCount" />
+
+            <label for="estimate-fp-eq">外部查询数量（可选）</label>
+            <input id="estimate-fp-eq" type="number" min="0" v-model.number="estimateForm.externalInquiryCount" />
+
+            <label for="estimate-fp-ilf">内部逻辑文件数量（可选）</label>
+            <input id="estimate-fp-ilf" type="number" min="0" v-model.number="estimateForm.internalLogicalFileCount" />
+
+            <label for="estimate-fp-eif">外部接口文件数量（可选）</label>
+            <input id="estimate-fp-eif" type="number" min="0" v-model.number="estimateForm.externalInterfaceFileCount" />
+
+            <label for="estimate-fp-vaf">调整因子（可选）</label>
+            <input id="estimate-fp-vaf" type="number" min="0.65" max="1.35" step="0.01" v-model.number="estimateForm.valueAdjustmentFactor" />
+          </template>
+
+          <label for="estimate-cost-rate">每人月成本</label>
+          <input id="estimate-cost-rate" type="number" min="1" v-model.number="estimateForm.costRatePerPersonMonth" />
+
+          <label for="estimate-schedule">目标工期（月）</label>
+          <input id="estimate-schedule" type="number" min="0.1" step="0.1" v-model.number="estimateForm.targetScheduleMonths" />
+
+          <button type="submit" class="primary-button" :disabled="estimationLoading">开始估算</button>
         </form>
 
-        <form class="pane" @submit.prevent="runImage">
-          <h3>Image Input</h3>
-          <label for="image-type">Diagram Type</label>
-          <select id="image-type" v-model="imageType">
-            <option value="class">class</option>
-            <option value="flow">flow</option>
-            <option value="usecase">usecase</option>
-          </select>
-          <label for="image-file">Diagram Image (.png/.jpg)</label>
-          <input id="image-file" type="file" accept=".png,.jpg,.jpeg" @change="onImageFileChange" />
-          <button type="submit" class="primary-button" :disabled="diagramLoading">Analyze Image Diagram</button>
-        </form>
-      </div>
+        <p v-if="estimationLoading" class="status-banner">正在执行项目估算...</p>
+        <p v-if="estimationError" class="status-banner error">{{ estimationError }}</p>
 
-      <p v-if="diagramLoading" class="status-banner">Running diagram recognition...</p>
-      <p v-if="diagramError" class="status-banner error">{{ diagramError }}</p>
+        <EstimationResultPanel v-if="estimationResult" :estimation-result="estimationResult" />
+      </section>
 
-      <div v-if="diagramResult" class="result-box">
-        <h3>Diagram Result</h3>
-        <p>Type: {{ diagramResult.diagramType }} | Source: {{ diagramResult.sourceType }}</p>
-        <p>Confidence: {{ diagramResult.confidence?.overall ?? 'n/a' }}</p>
-        <pre>{{ JSON.stringify(diagramResult, null, 2) }}</pre>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>Mainline 3: Project Estimation</h2>
-      <form class="estimation-grid" @submit.prevent="runEstimation">
-        <label for="estimate-diagram-type">Diagram Type</label>
-        <select id="estimate-diagram-type" v-model="estimateForm.diagramType">
-          <option value="class">class</option>
-          <option value="flow">flow</option>
-          <option value="usecase">usecase</option>
-        </select>
-
-        <label for="estimate-loc">Total LoC</label>
-        <input id="estimate-loc" type="number" min="0" v-model.number="estimateForm.totalLoc" />
-
-        <label for="estimate-classes">Class Count</label>
-        <input id="estimate-classes" type="number" min="0" v-model.number="estimateForm.classCount" />
-
-        <label for="estimate-relations">Relationship Count</label>
-        <input id="estimate-relations" type="number" min="0" v-model.number="estimateForm.relationshipCount" />
-
-        <label for="estimate-usecases">Use Case Count</label>
-        <input id="estimate-usecases" type="number" min="0" v-model.number="estimateForm.useCaseCount" />
-
-        <label for="estimate-decisions">Decision Node Count</label>
-        <input id="estimate-decisions" type="number" min="0" v-model.number="estimateForm.decisionNodeCount" />
-
-        <label for="estimate-simple-actors">Simple Actor Count (Optional)</label>
-        <input id="estimate-simple-actors" type="number" min="0" v-model.number="estimateForm.simpleActorCount" />
-
-        <label for="estimate-average-actors">Average Actor Count (Optional)</label>
-        <input id="estimate-average-actors" type="number" min="0" v-model.number="estimateForm.averageActorCount" />
-
-        <label for="estimate-complex-actors">Complex Actor Count (Optional)</label>
-        <input id="estimate-complex-actors" type="number" min="0" v-model.number="estimateForm.complexActorCount" />
-
-        <label for="estimate-simple-usecases">Simple Use Case Count (Optional)</label>
-        <input id="estimate-simple-usecases" type="number" min="0" v-model.number="estimateForm.simpleUseCaseCount" />
-
-        <label for="estimate-average-usecases">Average Use Case Count (Optional)</label>
-        <input id="estimate-average-usecases" type="number" min="0" v-model.number="estimateForm.averageUseCaseCount" />
-
-        <label for="estimate-complex-usecases">Complex Use Case Count (Optional)</label>
-        <input id="estimate-complex-usecases" type="number" min="0" v-model.number="estimateForm.complexUseCaseCount" />
-
-        <label for="estimate-tcf">Technical Complexity Factor (Optional)</label>
-        <input id="estimate-tcf" type="number" min="0.6" max="1.4" step="0.01" v-model.number="estimateForm.technicalComplexityFactor" />
-
-        <label for="estimate-ef">Environmental Factor (Optional)</label>
-        <input id="estimate-ef" type="number" min="0.6" max="1.4" step="0.01" v-model.number="estimateForm.environmentalFactor" />
-
-        <label for="estimate-cost-rate">Cost Rate / Person-Month</label>
-        <input id="estimate-cost-rate" type="number" min="1" v-model.number="estimateForm.costRatePerPersonMonth" />
-
-        <label for="estimate-schedule">Target Schedule (Months)</label>
-        <input id="estimate-schedule" type="number" min="0.1" step="0.1" v-model.number="estimateForm.targetScheduleMonths" />
-
-        <button type="submit" class="primary-button" :disabled="estimationLoading">Run Estimation</button>
-      </form>
-
-      <p v-if="estimationLoading" class="status-banner">Estimating project workload...</p>
-      <p v-if="estimationError" class="status-banner error">{{ estimationError }}</p>
-
-      <div v-if="estimationResult" class="result-box">
-        <h3>Estimation Result</h3>
-        <pre>{{ JSON.stringify(estimationResult, null, 2) }}</pre>
-      </div>
-    </section>
+      <section id="export" class="panel">
+        <div class="section-heading">
+          <p class="section-kicker">输出</p>
+          <h2>报告导出</h2>
+        </div>
+        <p class="shell-lede">将当前可用的主线结果统一汇总为报告。</p>
+        <div class="action-row">
+          <button type="button" class="primary-button" :disabled="!hasAnyTrackData" @click="downloadCsv">导出 CSV</button>
+          <button type="button" class="primary-button" :disabled="!hasAnyTrackData" @click="downloadMarkdown">导出 Markdown</button>
+        </div>
+        <p v-if="!hasAnyTrackData" class="status-banner">至少完成一条主线后才能导出报告。</p>
+      </section>
+    </div>
   </main>
 </template>
 
@@ -180,11 +220,17 @@ import {
   fetchModelsStatus
 } from './api/metrics'
 import InputWorkspace from './components/InputWorkspace.vue'
+import LkMetricsPanel from './components/LkMetricsPanel.vue'
+import MainlineOverview from './components/MainlineOverview.vue'
 import MetricInfoDrawer from './components/MetricInfoDrawer.vue'
 import MetricsCharts from './components/MetricsCharts.vue'
 import MetricsTables from './components/MetricsTables.vue'
 import OverviewCards from './components/OverviewCards.vue'
+import DiagramResultPanel from './components/DiagramResultPanel.vue'
+import EstimationResultPanel from './components/EstimationResultPanel.vue'
+import ProductHero from './components/ProductHero.vue'
 import RiskPanel from './components/RiskPanel.vue'
+import WorkbenchIntro from './components/WorkbenchIntro.vue'
 import { useAnalysis } from './composables/useAnalysis'
 import { buildCsv, buildMarkdownReport } from './utils/exporters'
 
@@ -204,6 +250,7 @@ const estimationLoading = ref(false)
 const estimationError = ref('')
 const estimationResult = ref(null)
 const estimateForm = ref({
+  estimationMethod: 'ucp',
   diagramType: 'class',
   totalLoc: null,
   classCount: null,
@@ -218,10 +265,17 @@ const estimateForm = ref({
   complexUseCaseCount: null,
   technicalComplexityFactor: null,
   environmentalFactor: null,
+  externalInputCount: null,
+  externalOutputCount: null,
+  externalInquiryCount: null,
+  internalLogicalFileCount: null,
+  externalInterfaceFileCount: null,
+  valueAdjustmentFactor: null,
   costRatePerPersonMonth: 15000,
   targetScheduleMonths: 2
 })
 
+const resolvedLkMetrics = computed(() => result.value?.codeMetrics?.lkMetrics || result.value?.codeMetrics?.lkPresentation || null)
 const hasAnyTrackData = computed(() => !!(result.value || diagramResult.value || estimationResult.value))
 const codeTrackStatus = computed(() => {
   if (loading.value) {
@@ -245,6 +299,11 @@ const estimationTrackStatus = computed(() => {
 onMounted(async () => {
   await Promise.all([loadBackendHealth(), loadRecognitionStatus()])
 })
+
+function handleWorkbenchSelect(targetId) {
+  const target = document.getElementById(targetId)
+  target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
 async function loadBackendHealth() {
   try {
@@ -305,7 +364,7 @@ function onImageFileChange(event) {
 
 async function runStructured() {
   if (!structuredFile.value) {
-    diagramError.value = 'Please choose a structured diagram file.'
+    diagramError.value = '请选择结构化设计图文件。'
     return
   }
   diagramLoading.value = true
@@ -314,7 +373,7 @@ async function runStructured() {
     const response = await analyzeStructuredDiagram(structuredFile.value, structuredType.value)
     diagramResult.value = response.data.diagramAnalysis || response.data
   } catch (err) {
-    diagramError.value = err?.response?.data?.message || err?.message || 'Structured analysis failed'
+    diagramError.value = err?.response?.data?.message || err?.message || '结构化设计图分析失败'
   } finally {
     diagramLoading.value = false
   }
@@ -322,7 +381,7 @@ async function runStructured() {
 
 async function runImage() {
   if (!imageFile.value) {
-    diagramError.value = 'Please choose an image diagram file.'
+    diagramError.value = '请选择设计图图片文件。'
     return
   }
   diagramLoading.value = true
@@ -331,7 +390,7 @@ async function runImage() {
     const response = await analyzeImageDiagram(imageFile.value, imageType.value)
     diagramResult.value = response.data.diagramAnalysis || response.data
   } catch (err) {
-    diagramError.value = err?.response?.data?.message || err?.message || 'Image analysis failed'
+    diagramError.value = err?.response?.data?.message || err?.message || '设计图图片分析失败'
   } finally {
     diagramLoading.value = false
   }
@@ -350,7 +409,7 @@ async function runEstimation() {
     const response = await estimateProject(payload)
     estimationResult.value = response.data.projectEstimation || response.data
   } catch (err) {
-    estimationError.value = err?.response?.data?.message || err?.message || 'Estimation failed'
+    estimationError.value = err?.response?.data?.message || err?.message || '项目估算失败'
   } finally {
     estimationLoading.value = false
   }

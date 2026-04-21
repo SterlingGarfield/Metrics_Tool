@@ -2,6 +2,7 @@
 
 ## Inputs
 
+- `estimationMethod`: `ucp|function_point` (optional, default `ucp`)
 - `diagramType`: `class|flow|usecase`
 - `totalLoc`
 - `classCount`
@@ -12,10 +13,29 @@
   - `simpleActorCount`, `averageActorCount`, `complexActorCount`
   - `simpleUseCaseCount`, `averageUseCaseCount`, `complexUseCaseCount`
   - `technicalComplexityFactor`, `environmentalFactor`
+- optional Function Point inputs:
+  - `externalInputCount`
+  - `externalOutputCount`
+  - `externalInquiryCount`
+  - `internalLogicalFileCount`
+  - `externalInterfaceFileCount`
+  - `valueAdjustmentFactor`
 - `costRatePerPersonMonth` (optional, default `15000`)
 - `targetScheduleMonths` (optional)
 
 ## Workload Paths
+
+### Path 0: Function Point
+
+- supported when `estimationMethod=function_point`
+- direct-input path:
+  - `UFP = EI * 4 + EO * 5 + EQ * 4 + ILF * 10 + EIF * 7`
+  - `AFP = UFP * VAF`
+  - workload person-months = `AFP / 12.0`
+- simplified fallback path:
+  - when FP counts are not supplied, derive a simplified FP profile from current project indicators (`totalLoc`, `classCount`, `relationshipCount`, `useCaseCount`, `decisionNodeCount`)
+  - use the same average FP weights above
+  - default `VAF = 1.0` when not supplied
 
 ### Path A: standard UCP (when standard UCP fields are provided)
 
@@ -63,5 +83,6 @@ where heuristic workload is the original code/diagram complexity model:
 The service returns a basis block with:
 
 - summary: short explanation of estimation strategy
-- details: concrete input values, UCP path (`standard|simplified`), and UCP intermediate values (`UAW`, `UUCW`, `UUCP`, `TCF`, `EF`, `UCP`)
+- details: concrete input values, method path, and intermediate values
 - structured UCP breakdown payload for report traceability
+- structured Function Point breakdown payload for report traceability

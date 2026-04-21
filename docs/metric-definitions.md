@@ -68,6 +68,13 @@
 - scheduleMonths
 - suggestedStaffing
 - basis.summary / basis.details
+- functionPointBreakdown.directInputUsed
+- functionPointBreakdown.externalInputCount / externalOutputCount / externalInquiryCount
+- functionPointBreakdown.internalLogicalFileCount / externalInterfaceFileCount
+- functionPointBreakdown.unadjustedFunctionPoints
+- functionPointBreakdown.valueAdjustmentFactor
+- functionPointBreakdown.adjustedFunctionPoints
+- functionPointBreakdown.workloadPersonMonths
 - ucpBreakdown.standardInputUsed
 - ucpBreakdown.simpleActorCount / averageActorCount / complexActorCount
 - ucpBreakdown.simpleUseCaseCount / averageUseCaseCount / complexUseCaseCount
@@ -75,3 +82,8 @@
 - ucpBreakdown.technicalComplexityFactor / environmentalFactor
 - ucpBreakdown.ucp
 - ucpBreakdown.workloadPersonMonths
+
+## Course Alignment References
+
+- `docs/course-requirement-matrix.zh-CN.md`
+- `docs/lk-course-alignment.zh-CN.md`

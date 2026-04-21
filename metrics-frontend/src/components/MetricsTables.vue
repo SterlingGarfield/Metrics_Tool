@@ -1,10 +1,14 @@
 <template>
   <section class="panel table-stack">
-    <h2>Class Metrics</h2>
+    <header class="result-heading">
+      <p class="result-kicker">指标表</p>
+      <h2>类与方法指标明细</h2>
+    </header>
+    <h3 class="table-subtitle">类指标明细</h3>
     <table>
       <thead>
         <tr>
-          <th>Class</th>
+          <th>类名</th>
           <th>WMC</th>
           <th>CBO</th>
           <th>RFC</th>
@@ -24,19 +28,19 @@
       </tbody>
     </table>
 
-    <h2>Method Metrics</h2>
+    <h3 class="table-subtitle">方法指标明细</h3>
     <table>
       <thead>
         <tr>
-          <th>Method</th>
-          <th>Complexity</th>
-          <th>LOC</th>
-          <th>Depth</th>
+          <th>方法名</th>
+          <th>圈复杂度</th>
+          <th>代码行数</th>
+          <th>最大嵌套深度</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="item in methodMetrics" :key="item.className + item.methodName">
-          <td>{{ item.className }}#{{ item.methodName }}</td>
+          <td>{{ item.className }} · {{ item.methodName }}</td>
           <td>{{ item.cyclomaticComplexity }}</td>
           <td>{{ item.loc }}</td>
           <td>{{ item.maxNestingDepth }}</td>

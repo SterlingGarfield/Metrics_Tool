@@ -35,6 +35,7 @@
 ## 4. Result Analysis And Evaluation
 
 - Demonstration on sample code + diagram inputs
+- Keep the live demo order aligned with `docs/course-defense-demo.zh-CN.md` so the results section and the on-site walkthrough tell the same story
 - Comparison between predicted metrics/estimation and practical expectations
 - Accuracy, usability, and effectiveness discussion
 - Identified limitations and confidence caveats
@@ -46,3 +47,10 @@
 - Recognition robustness upgrades and better calibration
 - Future integration and report automation enhancements
 
+## 6. Course Alignment Appendix
+
+- Defense walkthrough: `docs/course-defense-demo.zh-CN.md`
+- Defense evidence index: `docs/course-evidence-index.zh-CN.md`
+- Course requirement matrix: `docs/course-requirement-matrix.zh-CN.md`
+- LK course-aligned mapping: `docs/lk-course-alignment.zh-CN.md`
+- Metric dictionary and formulas: `docs/metric-definitions.md`

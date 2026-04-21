@@ -2,7 +2,9 @@ package com.metrics.service;
 
 import com.metrics.model.request.EstimateProjectRequest;
 import com.metrics.model.DiagramType;
+import com.metrics.model.EstimationMethod;
 import com.metrics.model.response.EstimationBasis;
+import com.metrics.model.response.FunctionPointBreakdown;
 import com.metrics.model.response.ProjectEstimation;
 import com.metrics.model.response.UcpBreakdown;
 import java.util.Locale;
@@ -14,8 +16,17 @@ public class EstimationService {
     private static final double DEFAULT_COST_RATE = 15000.0;
     private static final double STANDARD_UCP_PER_PERSON_MONTH = 8.0;
     private static final double SIMPLIFIED_UCP_PER_PERSON_MONTH = 10.0;
+    private static final double FUNCTION_POINTS_PER_PERSON_MONTH = 12.0;
 
     public ProjectEstimation estimate(EstimateProjectRequest request) {
+        EstimationMethod method = request.estimationMethod() == null ? EstimationMethod.UCP : request.estimationMethod();
+        if (method == EstimationMethod.FUNCTION_POINT) {
+            return estimateWithFunctionPoints(request);
+        }
+        return estimateWithUcp(request);
+    }
+
+    private ProjectEstimation estimateWithUcp(EstimateProjectRequest request) {
         UcpBreakdown ucpBreakdown = buildUcpBreakdown(request);
         double heuristicWorkload = computeHeuristicWorkload(request);
         double workloadPersonMonths = round2(computeFinalWorkload(heuristicWorkload, ucpBreakdown));
@@ -55,7 +66,49 @@ public class EstimationService {
                 : "Heuristic blend of code size, OO coupling, and diagram complexity with simplified UCP fallback.",
             basisDetails
         );
-        return new ProjectEstimation(workloadPersonMonths, cost, scheduleMonths, suggestedStaffing, basis, ucpBreakdown);
+        return new ProjectEstimation(workloadPersonMonths, cost, scheduleMonths, suggestedStaffing, basis, ucpBreakdown, null);
+    }
+
+    private ProjectEstimation estimateWithFunctionPoints(EstimateProjectRequest request) {
+        FunctionPointBreakdown functionPointBreakdown = buildFunctionPointBreakdown(request);
+        double workloadPersonMonths = round2(Math.max(0.5, functionPointBreakdown.workloadPersonMonths()));
+        double costRate = request.costRatePerPersonMonth() == null ? DEFAULT_COST_RATE : request.costRatePerPersonMonth();
+        double scheduleMonths = request.targetScheduleMonths() == null
+            ? inferSchedule(workloadPersonMonths)
+            : request.targetScheduleMonths();
+        int suggestedStaffing = Math.max(1, (int) Math.ceil(workloadPersonMonths / Math.max(1.0, scheduleMonths)));
+        double cost = round2(workloadPersonMonths * costRate);
+
+        String fpPath = functionPointBreakdown.directInputUsed() ? "direct" : "derived";
+        String basisDetails = String.format(
+            Locale.ROOT,
+            "Inputs: totalLoc=%d, classCount=%d, relationshipCount=%d, useCaseCount=%d, decisionNodeCount=%d, diagramType=%s, costRate=%.2f, targetSchedule=%s. Function Point path=%s, EI=%d, EO=%d, EQ=%d, ILF=%d, EIF=%d, UFP=%.2f, VAF=%.2f, AFP=%.2f, FPWorkload=%.2f.",
+            safeInt(request.totalLoc()),
+            safeInt(request.classCount()),
+            safeInt(request.relationshipCount()),
+            safeInt(request.useCaseCount()),
+            safeInt(request.decisionNodeCount()),
+            request.diagramType().value(),
+            costRate,
+            request.targetScheduleMonths() == null ? "auto" : String.format(Locale.ROOT, "%.2f", request.targetScheduleMonths()),
+            fpPath,
+            functionPointBreakdown.externalInputCount(),
+            functionPointBreakdown.externalOutputCount(),
+            functionPointBreakdown.externalInquiryCount(),
+            functionPointBreakdown.internalLogicalFileCount(),
+            functionPointBreakdown.externalInterfaceFileCount(),
+            functionPointBreakdown.unadjustedFunctionPoints(),
+            functionPointBreakdown.valueAdjustmentFactor(),
+            functionPointBreakdown.adjustedFunctionPoints(),
+            functionPointBreakdown.workloadPersonMonths()
+        );
+        EstimationBasis basis = new EstimationBasis(
+            functionPointBreakdown.directInputUsed()
+                ? "Function Point estimation using direct transactional and data-function counts."
+                : "Function Point estimation using derived transactional and data-function counts from current project indicators.",
+            basisDetails
+        );
+        return new ProjectEstimation(workloadPersonMonths, cost, scheduleMonths, suggestedStaffing, basis, null, functionPointBreakdown);
     }
 
     private double computeFinalWorkload(double heuristicWorkload, UcpBreakdown ucpBreakdown) {
@@ -160,6 +213,91 @@ public class EstimationService {
             ucp,
             workload
         );
+    }
+
+    private FunctionPointBreakdown buildFunctionPointBreakdown(EstimateProjectRequest request) {
+        boolean directInputUsed = hasDirectFunctionPointInput(request);
+
+        int externalInputCount = directInputUsed
+            ? safeInt(request.externalInputCount())
+            : deriveExternalInputCount(request);
+        int externalOutputCount = directInputUsed
+            ? safeInt(request.externalOutputCount())
+            : deriveExternalOutputCount(request);
+        int externalInquiryCount = directInputUsed
+            ? safeInt(request.externalInquiryCount())
+            : deriveExternalInquiryCount(request);
+        int internalLogicalFileCount = directInputUsed
+            ? safeInt(request.internalLogicalFileCount())
+            : deriveInternalLogicalFileCount(request);
+        int externalInterfaceFileCount = directInputUsed
+            ? safeInt(request.externalInterfaceFileCount())
+            : deriveExternalInterfaceFileCount(request);
+
+        double unadjustedFunctionPoints = round2(
+            externalInputCount * 4.0
+                + externalOutputCount * 5.0
+                + externalInquiryCount * 4.0
+                + internalLogicalFileCount * 10.0
+                + externalInterfaceFileCount * 7.0
+        );
+        double valueAdjustmentFactor = request.valueAdjustmentFactor() == null ? 1.0 : request.valueAdjustmentFactor();
+        double adjustedFunctionPoints = round2(unadjustedFunctionPoints * valueAdjustmentFactor);
+        double workloadPersonMonths = round2(adjustedFunctionPoints / FUNCTION_POINTS_PER_PERSON_MONTH);
+
+        return new FunctionPointBreakdown(
+            directInputUsed,
+            externalInputCount,
+            externalOutputCount,
+            externalInquiryCount,
+            internalLogicalFileCount,
+            externalInterfaceFileCount,
+            unadjustedFunctionPoints,
+            round2(valueAdjustmentFactor),
+            adjustedFunctionPoints,
+            workloadPersonMonths
+        );
+    }
+
+    private boolean hasDirectFunctionPointInput(EstimateProjectRequest request) {
+        return request.externalInputCount() != null
+            || request.externalOutputCount() != null
+            || request.externalInquiryCount() != null
+            || request.internalLogicalFileCount() != null
+            || request.externalInterfaceFileCount() != null;
+    }
+
+    private int deriveExternalInputCount(EstimateProjectRequest request) {
+        int useCaseCount = safeInt(request.useCaseCount());
+        int decisionNodeCount = safeInt(request.decisionNodeCount());
+        if (useCaseCount > 0) {
+            return Math.max(1, (int) Math.ceil(useCaseCount * 0.8));
+        }
+        return Math.max(1, (int) Math.ceil(Math.max(1, decisionNodeCount) / 4.0));
+    }
+
+    private int deriveExternalOutputCount(EstimateProjectRequest request) {
+        return Math.max(1, (int) Math.ceil((safeInt(request.relationshipCount()) + safeInt(request.decisionNodeCount())) / 6.0));
+    }
+
+    private int deriveExternalInquiryCount(EstimateProjectRequest request) {
+        int useCaseCount = safeInt(request.useCaseCount());
+        if (useCaseCount > 0) {
+            return Math.max(1, (int) Math.ceil(useCaseCount / 2.0));
+        }
+        return Math.max(1, (int) Math.ceil(Math.max(1, safeInt(request.classCount())) / 3.0));
+    }
+
+    private int deriveInternalLogicalFileCount(EstimateProjectRequest request) {
+        int classCount = safeInt(request.classCount());
+        if (classCount > 0) {
+            return Math.max(1, (int) Math.ceil(classCount / 4.0));
+        }
+        return Math.max(1, (int) Math.ceil(Math.max(1, safeInt(request.totalLoc())) / 1500.0));
+    }
+
+    private int deriveExternalInterfaceFileCount(EstimateProjectRequest request) {
+        return Math.max(0, (int) Math.ceil(safeInt(request.relationshipCount()) / 12.0));
     }
 
     private double computeHeuristicWorkload(EstimateProjectRequest request) {
