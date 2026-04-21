@@ -380,6 +380,44 @@ textarea {
   gap: 24px;
 }
 
+.results-section {
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.results-section-heading {
+  display: grid;
+  gap: 8px;
+}
+
+.results-section-heading h2,
+.results-subheading {
+  margin: 0;
+  color: #fff4d7;
+}
+
+.results-section-kicker {
+  margin: 0;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  color: #ffb765;
+}
+
+.results-section-copy,
+.results-empty-state,
+.risk-item p,
+.metric-guide-list {
+  margin: 0;
+  color: rgba(245, 232, 199, 0.82);
+}
+
+.results-subheading {
+  margin-top: 4px;
+  font-size: 1.02rem;
+}
+
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -392,6 +430,9 @@ textarea {
   padding: 18px;
   display: grid;
   gap: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+    rgba(5, 11, 20, 0.72);
 }
 
 .metric-card strong {
@@ -406,7 +447,6 @@ textarea {
 .table-stack table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
   border: 1px solid var(--line);
   border-radius: 20px;
   overflow: hidden;
@@ -417,6 +457,48 @@ textarea {
   text-align: left;
   padding: 10px;
   border-bottom: 1px solid var(--line);
+}
+
+.table-stack thead {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.risk-list,
+.metric-guide-list {
+  padding-left: 20px;
+}
+
+.risk-list {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.risk-item {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  list-style: none;
+}
+
+.risk-item strong,
+.risk-item span {
+  display: block;
+}
+
+.risk-item span {
+  margin-top: 4px;
+  color: #fff4d7;
+}
+
+.risk-item p {
+  margin-top: 8px;
+}
+
+.metric-guide-list {
+  display: grid;
+  gap: 10px;
 }
 
 .status-banner {

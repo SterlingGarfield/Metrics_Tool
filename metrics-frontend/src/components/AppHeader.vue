@@ -4,12 +4,12 @@
       <img class="brand-logo" :src="logoMinimal" alt="平台标志" />
       <div>
         <p class="brand-kicker">BRO Metrics</p>
-        <strong class="brand-title">BRO Shell</strong>
+        <strong class="brand-title">Java 度量分析平台</strong>
       </div>
     </div>
 
     <span class="status-badge" :class="statusClass">
-      后端 {{ healthStatus }}
+      后端状态：{{ healthStatus }}
     </span>
   </header>
 </template>

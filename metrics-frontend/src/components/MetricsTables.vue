@@ -1,10 +1,17 @@
 <template>
-  <section class="panel table-stack">
-    <h2>Class Metrics</h2>
+  <section class="panel results-section table-stack">
+    <div class="results-section-heading">
+      <p class="results-section-kicker">明细</p>
+      <h2>类级指标</h2>
+      <p class="results-section-copy">
+        先查看类级结构性指标，再下钻到方法级复杂度和嵌套深度细节。
+      </p>
+    </div>
+
     <table>
       <thead>
         <tr>
-          <th>Class</th>
+          <th>类名</th>
           <th>WMC</th>
           <th>CBO</th>
           <th>RFC</th>
@@ -24,14 +31,14 @@
       </tbody>
     </table>
 
-    <h2>Method Metrics</h2>
+    <h3 class="results-subheading">方法级指标</h3>
     <table>
       <thead>
         <tr>
-          <th>Method</th>
-          <th>Complexity</th>
+          <th>方法</th>
+          <th>复杂度</th>
           <th>LOC</th>
-          <th>Depth</th>
+          <th>嵌套深度</th>
         </tr>
       </thead>
       <tbody>

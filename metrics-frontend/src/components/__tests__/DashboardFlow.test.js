@@ -46,7 +46,18 @@ vi.mock('../../api/metrics', () => ({
           branchCount: 1
         }
       ],
-      riskFindings: [],
+      riskFindings: [
+        {
+          scope: 'CLASS',
+          target: 'Demo',
+          message: 'Class complexity or coupling is high'
+        },
+        {
+          scope: 'METHOD',
+          target: 'Demo#go',
+          message: 'Cyclomatic complexity is high'
+        }
+      ],
       parseIssues: [],
       partial: false
     }
@@ -58,10 +69,11 @@ vi.mock('../../api/metrics', () => ({
 test('renders the branded homepage before analysis starts', async () => {
   render(App)
 
-  expect(screen.getByText('Java 度量分析平台')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Java 度量分析平台' })).toBeInTheDocument()
   expect(screen.getByText('暗色可视化代码度量与风险洞察')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '开始分析' })).toBeInTheDocument()
   expect(screen.getByText('支持代码输入、单文件、多文件与文件夹扫描')).toBeInTheDocument()
+  expect(screen.getByText('从任意一种输入方式开始')).toBeInTheDocument()
 })
 
 test('shows the new results hierarchy after text analysis completes', async () => {
@@ -74,5 +86,14 @@ test('shows the new results hierarchy after text analysis completes', async () =
   expect(await screen.findByText('本次分析概览')).toBeInTheDocument()
   expect(await screen.findByText('风险焦点')).toBeInTheDocument()
   expect(await screen.findByText('复杂度趋势')).toBeInTheDocument()
+  expect(await screen.findByText('类级指标')).toBeInTheDocument()
+  expect(await screen.findByText('指标说明')).toBeInTheDocument()
+  expect(await screen.findByText('类级风险')).toBeInTheDocument()
+  expect(await screen.findByText('类复杂度或耦合度偏高')).toBeInTheDocument()
+  expect(await screen.findByText('圈复杂度偏高')).toBeInTheDocument()
   expect(await screen.findByRole('button', { name: '导出 CSV' })).toBeInTheDocument()
+
+  const riskHeading = screen.getByText('风险焦点')
+  const trendHeading = screen.getByText('复杂度趋势')
+  expect(riskHeading.compareDocumentPosition(trendHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 })

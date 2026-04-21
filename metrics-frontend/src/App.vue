@@ -12,8 +12,8 @@
           @submit-folder="runFolderAnalysis"
         />
 
-        <p v-if="loading" class="status-banner">Analyzing source set...</p>
-        <p v-if="error" class="status-banner error">{{ error }}</p>
+        <p v-if="loading" class="status-banner">正在分析源码与度量数据...</p>
+        <p v-if="error" class="status-banner error">分析失败：{{ error }}</p>
       </div>
 
       <EmptyStatePanel v-if="!result" />
@@ -22,12 +22,12 @@
     <section v-if="result" class="results-shell">
       <OverviewCards :summary="result.projectSummary" />
       <div class="action-row">
-        <button type="button" class="primary-button" @click="downloadCsv">Export CSV</button>
-        <button type="button" class="primary-button" @click="downloadMarkdown">Export Markdown</button>
+        <button type="button" class="primary-button" @click="downloadCsv">导出 CSV</button>
+        <button type="button" class="primary-button" @click="downloadMarkdown">导出 Markdown</button>
       </div>
+      <RiskPanel :risk-findings="result.riskFindings" />
       <MetricsCharts :method-metrics="result.methodMetrics" />
       <MetricsTables :class-metrics="result.classMetrics" :method-metrics="result.methodMetrics" />
-      <RiskPanel :risk-findings="result.riskFindings" />
       <MetricInfoDrawer />
     </section>
   </main>
