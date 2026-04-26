@@ -2,7 +2,7 @@
   "name": "metrics-desktop",
   "private": true,
   "version": "0.0.1",
-  "description": "Windows desktop shell for Metrics Tool",
+  "description": "Desktop-first metrics workbench with code analysis, design OCR suggestions, and estimation modules",
   "main": "src/main/index.cjs",
   "type": "commonjs",
   "scripts": {
