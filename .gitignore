@@ -8,3 +8,7 @@ metrics-backend/src/main/resources/static/
 metrics-desktop/node_modules/
 metrics-desktop/dist/
 metrics-desktop/staged/
+.codex-artifacts/
+.ocr311/
+models/paddleocr/
+models/.paddleocr/
