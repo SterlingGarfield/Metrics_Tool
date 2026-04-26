@@ -13,6 +13,9 @@ public record ClassMetrics(
     int nom,
     int noa,
     int publicMethodCount,
+    int addedMethodCount,
+    int overriddenMethodCount,
+    double specializationIndex,
     double commentRatio,
     boolean partial
 ) {}

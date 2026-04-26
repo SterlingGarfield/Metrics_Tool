@@ -1,0 +1,31 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="accent-bg" x1="66" y1="64" x2="531" y2="361" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF7F1"/>
+      <stop offset="1" stop-color="#EAF3FD"/>
+    </linearGradient>
+    <linearGradient id="accent-pig" x1="213" y1="120" x2="419" y2="335" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD8D6" stop-opacity="0.88"/>
+      <stop offset="1" stop-color="#F1BDBE" stop-opacity="0.58"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="640" height="420" rx="40" fill="url(#accent-bg)"/>
+  <circle cx="120" cy="88" r="52" fill="#FFE6DE"/>
+  <circle cx="528" cy="82" r="44" fill="#ECF5FF"/>
+  <g opacity="0.78">
+    <circle cx="318" cy="225" r="112" fill="url(#accent-pig)"/>
+    <ellipse cx="240" cy="140" rx="44" ry="59" transform="rotate(-30 240 140)" fill="#FFD3D1" fill-opacity="0.78"/>
+    <ellipse cx="397" cy="140" rx="44" ry="59" transform="rotate(30 397 140)" fill="#FFD3D1" fill-opacity="0.78"/>
+    <ellipse cx="318" cy="236" rx="63" ry="48" fill="#F4B1B6" fill-opacity="0.72"/>
+    <ellipse cx="297" cy="235" rx="10" ry="14" fill="#734B55" fill-opacity="0.82"/>
+    <ellipse cx="336" cy="235" rx="10" ry="14" fill="#734B55" fill-opacity="0.82"/>
+    <path d="M279 196C289 186 302 180 315 180" stroke="#734B55" stroke-width="8" stroke-linecap="round"/>
+    <path d="M322 180C335 180 348 186 358 196" stroke="#734B55" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <g opacity="0.55" transform="translate(378 188)">
+    <path d="M0 58C24 54 39 45 54 23C65 8 74 0 85 0C100 0 111 12 111 26C111 42 95 54 73 67C56 77 43 90 26 107C16 94 6 81 -3 65L0 58Z" fill="#84A891"/>
+    <circle cx="34" cy="29" r="16" fill="#FFC0D2"/>
+    <circle cx="62" cy="42" r="13" fill="#F7D18D"/>
+  </g>
+</svg>

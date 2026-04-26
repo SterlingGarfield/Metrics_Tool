@@ -1,0 +1,64 @@
+{
+  "appId": "com.metrics.desktop",
+  "productName": "Metrics Tool",
+  "directories": {
+    "output": "dist",
+    "buildResources": "installer"
+  },
+  "files": [
+    "src/**/*",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "staged/payload/backend",
+      "to": "payload/backend",
+      "filter": [
+        "**/*"
+      ]
+    },
+    {
+      "from": "staged/payload/frontend",
+      "to": "payload/frontend",
+      "filter": [
+        "**/*"
+      ]
+    },
+    {
+      "from": "staged/payload/jre",
+      "to": "payload/jre",
+      "filter": [
+        "**/*"
+      ]
+    },
+    {
+      "from": "staged/payload/ocr-runtime",
+      "to": "payload/ocr-runtime",
+      "filter": [
+        "**/*"
+      ]
+    },
+    {
+      "from": "staged/payload/ocr-models",
+      "to": "payload/ocr-models",
+      "filter": [
+        "**/*"
+      ]
+    }
+  ],
+  "win": {
+    "target": [
+      "nsis"
+    ],
+    "artifactName": "MetricsToolDesktop-${version}.${ext}",
+    "icon": "installer/metrics-tool.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "installer/metrics-tool.ico",
+    "uninstallerIcon": "installer/metrics-tool.ico",
+    "installerHeaderIcon": "installer/metrics-tool.ico",
+    "include": "installer/custom-installer.nsh"
+  }
+}

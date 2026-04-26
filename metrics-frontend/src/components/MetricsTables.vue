@@ -1,10 +1,13 @@
 <template>
-  <section class="panel table-stack">
-    <header class="result-heading">
-      <p class="result-kicker">指标表</p>
-      <h2>类与方法指标明细</h2>
-    </header>
-    <h3 class="table-subtitle">类指标明细</h3>
+  <section class="panel results-section table-stack">
+    <div class="results-section-heading">
+      <p class="results-section-kicker">Details</p>
+      <h2>类级指标</h2>
+      <p class="results-section-copy">
+        保留类级和方法级明细，方便继续下钻到具体结构。
+      </p>
+    </div>
+
     <table>
       <thead>
         <tr>
@@ -28,14 +31,14 @@
       </tbody>
     </table>
 
-    <h3 class="table-subtitle">方法指标明细</h3>
+    <h3 class="results-subheading">方法级指标</h3>
     <table>
       <thead>
         <tr>
-          <th>方法名</th>
-          <th>圈复杂度</th>
-          <th>代码行数</th>
-          <th>最大嵌套深度</th>
+          <th>方法</th>
+          <th>复杂度</th>
+          <th>LOC</th>
+          <th>嵌套深度</th>
         </tr>
       </thead>
       <tbody>

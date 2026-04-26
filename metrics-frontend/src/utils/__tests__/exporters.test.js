@@ -1,146 +1,115 @@
 import { buildCsv, buildMarkdownReport } from '../exporters'
 
 describe('exporters', () => {
-  test('includes LK course-aligned view in markdown and csv exports when lk presentation is available', () => {
-    const snapshot = {
-      codeResult: {
+  test('includes LK metrics, design derived metrics, workload, and use case points in CSV output', () => {
+    const csv = buildCsv({
+      codeMetrics: {
+        available: true,
         projectSummary: {
-          totalFiles: 1,
-          totalClasses: 2,
-          totalMethods: 5,
-          totalLoc: 80
+          totalFiles: 2,
+          totalClasses: 3,
+          totalMethods: 4
         },
-        riskFindings: [],
-        codeMetrics: {
-          lkPresentation: {
-            classCount: 2,
-            methodCount: 5,
-            attributeCount: 4,
-            relationshipCount: 3,
-            averageMethodsPerClass: 2.5,
-            averageAttributesPerClass: 2.0,
-            relationDensity: 1.5,
-            inheritanceDepthDistribution: [0, 1]
-          }
+        classMetrics: [],
+        methodMetrics: [],
+        lkSummary: {
+          averageAddedMethodCount: 1.5,
+          averageOverriddenMethodCount: 0.5,
+          maxSpecializationIndex: 0.75,
+          inheritanceClassCount: 2
+        }
+      },
+      designMetrics: {
+        available: true,
+        diagramType: 'use-case',
+        classCount: 0,
+        relationshipCount: 5,
+        useCaseCount: 6,
+        actorCount: 4,
+        flowNodeCount: 0,
+        relationshipDensity: 0,
+        useCasesPerActor: 1.5
+      },
+      estimationMetrics: {
+        available: true,
+        mode: 'manual',
+        loc: 1200,
+        staffCount: 6,
+        devMonths: 2,
+        cost: 12000,
+        workloadPersonMonths: 12,
+        productivityPerPersonMonth: 100,
+        costPerLoc: 10,
+        useCasePoints: {
+          uaw: 8,
+          uucw: 35,
+          uucp: 43,
+          ucp: 42.57
         }
       }
-    }
+    })
 
-    const markdown = buildMarkdownReport(snapshot)
-    const csv = buildCsv(snapshot)
-
-    expect(markdown).toContain('### LK Course-Aligned View')
-    expect(markdown).toContain('- Class Count: 2')
-    expect(markdown).toContain('- Relationship Density: 1.50')
-    expect(markdown).toContain('- Inheritance Depth Distribution: [0,1]')
-
-    expect(csv).toContain('codeMetrics.lk,relationshipCount,3')
-    expect(csv).toContain('codeMetrics.lk,relationDensity,1.50')
-    expect(csv).toContain('codeMetrics.lk,inheritanceDepthDistribution,"[0,1]"')
+    expect(csv).toContain('lk.averageAddedMethodCount,1.5')
+    expect(csv).toContain('design.useCasesPerActor,1.5')
+    expect(csv).toContain('estimation.workloadPersonMonths,12')
+    expect(csv).toContain('estimation.useCasePoints.ucp,42.57')
   })
 
-  test('includes function point evidence in markdown and csv exports when fp breakdown is available', () => {
-    const snapshot = {
-      estimationResult: {
-        workloadPersonMonths: 14.85,
-        cost: 222750,
-        scheduleMonths: 3.1,
-        suggestedStaffing: 5,
-        basis: {
-          summary: 'Function Point estimation using direct transactional and data-function counts.'
+  test('includes dedicated markdown sections for LK metrics and use case points', () => {
+    const markdown = buildMarkdownReport({
+      codeMetrics: {
+        available: true,
+        projectSummary: {
+          totalFiles: 2,
+          totalClasses: 3,
+          totalMethods: 4,
+          totalLoc: 120
         },
-        functionPointBreakdown: {
-          directInputUsed: true,
-          externalInputCount: 12,
-          externalOutputCount: 8,
-          externalInquiryCount: 5,
-          internalLogicalFileCount: 4,
-          externalInterfaceFileCount: 2,
-          unadjustedFunctionPoints: 162,
-          valueAdjustmentFactor: 1.1,
-          adjustedFunctionPoints: 178.2,
-          workloadPersonMonths: 14.85
+        classMetrics: [],
+        methodMetrics: [],
+        lkSummary: {
+          averageAddedMethodCount: 1.5,
+          averageOverriddenMethodCount: 0.5,
+          maxSpecializationIndex: 0.75,
+          inheritanceClassCount: 2
         }
-      }
-    }
-
-    const markdown = buildMarkdownReport(snapshot)
-    const csv = buildCsv(snapshot)
-
-    expect(markdown).toContain('### Function Point Breakdown')
-    expect(markdown).toContain('- Direct Input Used: true')
-    expect(markdown).toContain('- Adjusted Function Points: 178.20')
-
-    expect(csv).toContain('estimation.fp,directInputUsed,true')
-    expect(csv).toContain('estimation.fp,adjustedFunctionPoints,178.20')
-  })
-
-  test('falls back to lk presentation when lk metrics is absent', () => {
-    const snapshot = {
-      codeResult: {
-        projectSummary: { totalFiles: 1, totalClasses: 1, totalMethods: 1, totalLoc: 12 },
-        riskFindings: [],
-        codeMetrics: {
-          lkPresentation: {
-            classCount: 1,
-            methodCount: 1,
-            attributeCount: 0,
-            relationshipCount: 0,
-            averageMethodsPerClass: 1,
-            averageAttributesPerClass: 0,
-            relationDensity: 0,
-            inheritanceDepthDistribution: [0]
-          }
+      },
+      designMetrics: {
+        available: true,
+        diagramType: 'use-case',
+        classCount: 0,
+        relationshipCount: 5,
+        useCaseCount: 6,
+        actorCount: 4,
+        flowNodeCount: 0,
+        relationshipDensity: 0,
+        useCasesPerActor: 1.5
+      },
+      estimationMetrics: {
+        available: true,
+        mode: 'use-case-points',
+        loc: 0,
+        staffCount: 0,
+        devMonths: 0,
+        cost: 0,
+        workloadPersonMonths: 0,
+        productivityPerPersonMonth: 0,
+        costPerLoc: 0,
+        useCasePoints: {
+          uaw: 8,
+          uucw: 35,
+          uucp: 43,
+          ucp: 42.57
         }
-      }
-    }
+      },
+      riskFindings: []
+    })
 
-    expect(buildMarkdownReport(snapshot)).toContain('### LK Course-Aligned View')
-    expect(buildCsv(snapshot)).toContain('codeMetrics.lk,classCount,1')
-  })
-
-  test('prefers lk metrics over lk presentation when both are present', () => {
-    const snapshot = {
-      codeResult: {
-        projectSummary: { totalFiles: 1, totalClasses: 3, totalMethods: 5, totalLoc: 42 },
-        riskFindings: [],
-        codeMetrics: {
-          lkMetrics: {
-            classCount: 7,
-            methodCount: 8,
-            attributeCount: 5,
-            relationshipCount: 4,
-            averageMethodsPerClass: 3.5,
-            averageAttributesPerClass: 2.5,
-            relationDensity: 9.99,
-            inheritanceDepthDistribution: [9, 8]
-          },
-          lkPresentation: {
-            classCount: 2,
-            methodCount: 2,
-            attributeCount: 1,
-            relationshipCount: 1,
-            averageMethodsPerClass: 1,
-            averageAttributesPerClass: 0.5,
-            relationDensity: 0.5,
-            inheritanceDepthDistribution: [0, 1]
-          }
-        }
-      }
-    }
-
-    const markdown = buildMarkdownReport(snapshot)
-    const csv = buildCsv(snapshot)
-
-    expect(markdown).toContain('- Class Count: 7')
-    expect(markdown).toContain('- Relationship Density: 9.99')
-    expect(markdown).toContain('- Inheritance Depth Distribution: [9,8]')
-    expect(markdown).not.toContain('- Class Count: 2')
-
-    expect(csv).toContain('codeMetrics.lk,classCount,7')
-    expect(csv).toContain('codeMetrics.lk,relationshipCount,4')
-    expect(csv).toContain('codeMetrics.lk,relationDensity,9.99')
-    expect(csv).toContain('codeMetrics.lk,inheritanceDepthDistribution,"[9,8]"')
-    expect(csv).not.toContain('codeMetrics.lk,classCount,2')
+    expect(markdown).toContain('## LK Metrics')
+    expect(markdown).toContain('## Design Metrics')
+    expect(markdown).toContain('## Project Estimation')
+    expect(markdown).toContain('## Use Case Points')
+    expect(markdown).toContain('- Workload Person-Months:')
+    expect(markdown).toContain('- UCP: 42.57')
   })
 })

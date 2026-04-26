@@ -10,4 +10,8 @@ public record ProjectSummary(
     double commentRatio,
     int highRiskClasses,
     int highRiskMethods
-) {}
+) {
+    public static ProjectSummary empty() {
+        return new ProjectSummary(0, 0, 0, 0, 0, 0, 0.0, 0, 0);
+    }
+}

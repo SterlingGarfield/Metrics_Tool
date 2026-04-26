@@ -1,230 +1,125 @@
 <template>
-  <main class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand-kicker">本地化分析流程</span>
-        <strong>软件度量工作台</strong>
-      </div>
-      <nav class="section-nav" aria-label="顶层导航">
-        <a href="#overview">产品概览</a>
-        <a href="#code-metrics">代码度量</a>
-        <a href="#diagram-metrics">设计图度量</a>
-        <a href="#estimation">项目估算</a>
-        <a href="#export">报告导出</a>
-      </nav>
-    </header>
+  <div class="app-frame" :data-theme="theme">
+    <div class="app-background-layer" aria-hidden="true"></div>
 
-    <section id="overview" class="app-section app-section--overview">
-      <ProductHero
-        :backend-status="healthStatus"
-        :recognition-status="recognitionStatus"
+    <div v-if="!hostUnavailable" class="desktop-titlebar-shell">
+      <DesktopTitleBar
+        :is-maximized="isMaximized"
+        @show-app-menu="showAppMenu"
+        @minimize-window="minimizeWindow"
+        @toggle-maximize-window="toggleMaximizeWindow"
+        @close-window="closeWindow"
       />
-      <MainlineOverview
-        :code-status="codeTrackStatus"
-        :diagram-status="diagramTrackStatus"
-        :estimation-status="estimationTrackStatus"
-      />
-    </section>
-
-    <section id="workbench" class="app-section app-section--workbench">
-      <WorkbenchIntro @select="handleWorkbenchSelect" />
-    </section>
-
-    <div class="workbench-stack">
-      <section id="code-metrics" class="panel">
-        <div class="section-heading">
-          <p class="section-kicker">主线一</p>
-          <h2>代码度量</h2>
-        </div>
-        <InputWorkspace
-          @submit-text="handleSubmitText"
-          @submit-file="handleSubmitFile"
-          @submit-files="handleSubmitFile"
-          @submit-folder="handleSubmitFolder"
-        />
-        <p v-if="loading" class="status-banner">正在分析代码集...</p>
-        <p v-if="error" class="status-banner error">{{ error }}</p>
-
-        <template v-if="result">
-          <OverviewCards :summary="result.projectSummary" />
-          <LkMetricsPanel v-if="resolvedLkMetrics" :lk-metrics="resolvedLkMetrics" />
-          <MetricsCharts :method-metrics="result.methodMetrics" />
-          <MetricsTables :class-metrics="result.classMetrics" :method-metrics="result.methodMetrics" />
-          <RiskPanel :risk-findings="result.riskFindings" />
-          <MetricInfoDrawer />
-        </template>
-      </section>
-
-      <section id="diagram-metrics" class="panel">
-        <div class="section-heading">
-          <p class="section-kicker">主线二</p>
-          <h2>设计图度量</h2>
-        </div>
-        <div class="two-column-grid">
-          <form class="pane" @submit.prevent="runStructured">
-            <h3>结构化设计图输入</h3>
-            <label for="structured-type">图类型</label>
-            <select id="structured-type" v-model="structuredType">
-              <option value="class">类图</option>
-              <option value="flow">流程图</option>
-              <option value="usecase">用例图</option>
-            </select>
-            <label for="structured-file">设计图文件（.puml / .mmd）</label>
-            <input id="structured-file" type="file" accept=".puml,.mmd,.txt" @change="onStructuredFileChange" />
-            <button type="submit" class="primary-button" :disabled="diagramLoading">分析结构化设计图</button>
-          </form>
-
-          <form class="pane" @submit.prevent="runImage">
-            <h3>设计图图片输入</h3>
-            <label for="image-type">图类型</label>
-            <select id="image-type" v-model="imageType">
-              <option value="class">类图</option>
-              <option value="flow">流程图</option>
-              <option value="usecase">用例图</option>
-            </select>
-            <label for="image-file">设计图图片（.png / .jpg）</label>
-            <input id="image-file" type="file" accept=".png,.jpg,.jpeg" @change="onImageFileChange" />
-            <button type="submit" class="primary-button" :disabled="diagramLoading">分析设计图图片</button>
-          </form>
-        </div>
-
-        <p v-if="diagramLoading" class="status-banner">正在执行设计图识别...</p>
-        <p v-if="diagramError" class="status-banner error">{{ diagramError }}</p>
-
-        <DiagramResultPanel v-if="diagramResult" :diagram-result="diagramResult" />
-      </section>
-
-      <section id="estimation" class="panel">
-        <div class="section-heading">
-          <p class="section-kicker">主线三</p>
-          <h2>项目估算</h2>
-        </div>
-        <form class="estimation-grid" @submit.prevent="runEstimation">
-          <label for="estimate-method">估算方法</label>
-          <select id="estimate-method" v-model="estimateForm.estimationMethod">
-            <option value="ucp">用例点（UCP）</option>
-            <option value="function_point">功能点（Function Point）</option>
-          </select>
-
-          <label for="estimate-diagram-type">设计图类型</label>
-          <select id="estimate-diagram-type" v-model="estimateForm.diagramType">
-            <option value="class">类图</option>
-            <option value="flow">流程图</option>
-            <option value="usecase">用例图</option>
-          </select>
-
-          <label for="estimate-loc">总代码行数</label>
-          <input id="estimate-loc" type="number" min="0" v-model.number="estimateForm.totalLoc" />
-
-          <label for="estimate-classes">类数量</label>
-          <input id="estimate-classes" type="number" min="0" v-model.number="estimateForm.classCount" />
-
-          <label for="estimate-relations">关系数量</label>
-          <input id="estimate-relations" type="number" min="0" v-model.number="estimateForm.relationshipCount" />
-
-          <label for="estimate-usecases">用例数量</label>
-          <input id="estimate-usecases" type="number" min="0" v-model.number="estimateForm.useCaseCount" />
-
-          <label for="estimate-decisions">判定节点数量</label>
-          <input id="estimate-decisions" type="number" min="0" v-model.number="estimateForm.decisionNodeCount" />
-
-          <template v-if="estimateForm.estimationMethod === 'ucp'">
-            <label for="estimate-simple-actors">简单参与者数量（可选）</label>
-            <input id="estimate-simple-actors" type="number" min="0" v-model.number="estimateForm.simpleActorCount" />
-
-            <label for="estimate-average-actors">平均参与者数量（可选）</label>
-            <input id="estimate-average-actors" type="number" min="0" v-model.number="estimateForm.averageActorCount" />
-
-            <label for="estimate-complex-actors">复杂参与者数量（可选）</label>
-            <input id="estimate-complex-actors" type="number" min="0" v-model.number="estimateForm.complexActorCount" />
-
-            <label for="estimate-simple-usecases">简单用例数量（可选）</label>
-            <input id="estimate-simple-usecases" type="number" min="0" v-model.number="estimateForm.simpleUseCaseCount" />
-
-            <label for="estimate-average-usecases">平均用例数量（可选）</label>
-            <input id="estimate-average-usecases" type="number" min="0" v-model.number="estimateForm.averageUseCaseCount" />
-
-            <label for="estimate-complex-usecases">复杂用例数量（可选）</label>
-            <input id="estimate-complex-usecases" type="number" min="0" v-model.number="estimateForm.complexUseCaseCount" />
-
-            <label for="estimate-tcf">技术复杂度因子（可选）</label>
-            <input id="estimate-tcf" type="number" min="0.6" max="1.4" step="0.01" v-model.number="estimateForm.technicalComplexityFactor" />
-
-            <label for="estimate-ef">环境因子（可选）</label>
-            <input id="estimate-ef" type="number" min="0.6" max="1.4" step="0.01" v-model.number="estimateForm.environmentalFactor" />
-          </template>
-
-          <template v-else>
-            <p class="status-banner">
-              如果希望后端根据当前项目指标自动推导简化的功能点画像，可以将功能点计数留空。
-            </p>
-
-            <label for="estimate-fp-ei">外部输入数量（可选）</label>
-            <input id="estimate-fp-ei" type="number" min="0" v-model.number="estimateForm.externalInputCount" />
-
-            <label for="estimate-fp-eo">外部输出数量（可选）</label>
-            <input id="estimate-fp-eo" type="number" min="0" v-model.number="estimateForm.externalOutputCount" />
-
-            <label for="estimate-fp-eq">外部查询数量（可选）</label>
-            <input id="estimate-fp-eq" type="number" min="0" v-model.number="estimateForm.externalInquiryCount" />
-
-            <label for="estimate-fp-ilf">内部逻辑文件数量（可选）</label>
-            <input id="estimate-fp-ilf" type="number" min="0" v-model.number="estimateForm.internalLogicalFileCount" />
-
-            <label for="estimate-fp-eif">外部接口文件数量（可选）</label>
-            <input id="estimate-fp-eif" type="number" min="0" v-model.number="estimateForm.externalInterfaceFileCount" />
-
-            <label for="estimate-fp-vaf">调整因子（可选）</label>
-            <input id="estimate-fp-vaf" type="number" min="0.65" max="1.35" step="0.01" v-model.number="estimateForm.valueAdjustmentFactor" />
-          </template>
-
-          <label for="estimate-cost-rate">每人月成本</label>
-          <input id="estimate-cost-rate" type="number" min="1" v-model.number="estimateForm.costRatePerPersonMonth" />
-
-          <label for="estimate-schedule">目标工期（月）</label>
-          <input id="estimate-schedule" type="number" min="0.1" step="0.1" v-model.number="estimateForm.targetScheduleMonths" />
-
-          <button type="submit" class="primary-button" :disabled="estimationLoading">开始估算</button>
-        </form>
-
-        <p v-if="estimationLoading" class="status-banner">正在执行项目估算...</p>
-        <p v-if="estimationError" class="status-banner error">{{ estimationError }}</p>
-
-        <EstimationResultPanel v-if="estimationResult" :estimation-result="estimationResult" />
-      </section>
-
-      <section id="export" class="panel">
-        <div class="section-heading">
-          <p class="section-kicker">输出</p>
-          <h2>报告导出</h2>
-        </div>
-        <p class="shell-lede">将当前可用的主线结果统一汇总为报告。</p>
-        <div class="action-row">
-          <button type="button" class="primary-button" :disabled="!hasAnyTrackData" @click="downloadCsv">导出 CSV</button>
-          <button type="button" class="primary-button" :disabled="!hasAnyTrackData" @click="downloadMarkdown">导出 Markdown</button>
-        </div>
-        <p v-if="!hasAnyTrackData" class="status-banner">至少完成一条主线后才能导出报告。</p>
-      </section>
     </div>
-  </main>
+
+    <main v-if="!hostUnavailable" class="desktop-workbench">
+      <aside class="desktop-sidebar-shell desktop-sidebar-shell--fixed">
+        <div class="desktop-content-toolbar" aria-label="工作台状态与显示设置">
+          <span class="status-badge" :class="statusClass">
+            后端状态：{{ healthStatus }}
+          </span>
+
+          <button
+            type="button"
+            class="theme-toggle"
+            :aria-label="toggleLabel"
+            @click="toggleTheme"
+          >
+            <span class="theme-toggle__label">Theme</span>
+            <span class="theme-toggle__value">{{ theme === 'dark' ? 'Dark' : 'Light' }}</span>
+          </button>
+        </div>
+
+        <DesktopSidebar
+          v-model:workspace="workspace"
+          v-model:codeMode="codeMode"
+        />
+      </aside>
+
+      <section class="desktop-content-shell desktop-content-shell--with-fixed-sidebar">
+        <div class="desktop-content-scroll">
+          <section class="workspace-stack">
+            <div class="workspace-column">
+              <InputWorkspace
+                v-model:workspace="workspace"
+                v-model:codeMode="codeMode"
+                :hide-workspace-switcher="true"
+                :use-case-defaults="useCaseDefaults"
+                @submit-text="runTextAnalysis"
+                @submit-file="runSingleFileAnalysis"
+                @submit-files="runMultiFileAnalysis"
+                @submit-folder="runFolderAnalysis"
+                @submit-design="runDesignAnalysis"
+                @submit-estimation="runEstimationAnalysis"
+                @submit-use-case-points="runUseCasePointAnalysis"
+              />
+
+              <p v-if="loading" class="status-banner">正在整理源码与度量结果...</p>
+              <p v-if="error" class="status-banner error">分析失败：{{ error }}</p>
+            </div>
+          </section>
+
+          <section v-if="result" class="results-shell">
+            <div class="action-row">
+              <AppActionButton @click="downloadCsv">
+                <template #icon>
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    <path d="M8.5 11.5L12 15L15.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M6 18.5H18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  </svg>
+                </template>
+                导出 CSV 报告
+              </AppActionButton>
+              <AppActionButton variant="secondary" @click="downloadMarkdown">
+                <template #icon>
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M6 5.75H14L18 9.75V18.25H6V5.75Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                    <path d="M14 5.75V9.75H18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                    <path d="M9 13.25H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  </svg>
+                </template>
+                导出 Markdown 报告
+              </AppActionButton>
+            </div>
+            <OverviewCards v-if="codeMetrics?.available" :summary="codeMetrics.projectSummary" />
+            <LkMetricsPanel v-if="lkSummary?.available" :summary="lkSummary" />
+            <RiskPanel
+              v-if="codeMetrics?.available || riskFindings.length"
+              :risk-findings="riskFindings"
+            />
+            <MetricsCharts
+              v-if="methodMetrics.length"
+              :method-metrics="methodMetrics"
+              :theme="theme"
+            />
+            <MetricsTables
+              v-if="classMetrics.length || methodMetrics.length"
+              :class-metrics="classMetrics"
+              :method-metrics="methodMetrics"
+            />
+            <DesignMetricsPanel v-if="designMetrics?.available" :summary="designMetrics" />
+            <EstimationPanel v-if="estimationMetrics?.available" :summary="estimationMetrics" />
+            <MetricInfoDrawer v-if="codeMetrics?.available" />
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <main v-else class="desktop-host-shell">
+      <DesktopHostUnavailablePanel />
+    </main>
+  </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import {
-  analyzeImageDiagram,
-  analyzeStructuredDiagram,
-  checkHealth,
-  checkRecognitionHealth,
-  estimateProject,
-  fetchModelsStatus
-} from './api/metrics'
+import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
+import { checkHealth, exportCsv, exportMarkdown } from './api/metrics'
+import AppActionButton from './components/AppActionButton.vue'
+import DesktopHostUnavailablePanel from './components/DesktopHostUnavailablePanel.vue'
+import DesktopSidebar from './components/DesktopSidebar.vue'
+import DesktopTitleBar from './components/DesktopTitleBar.vue'
 import InputWorkspace from './components/InputWorkspace.vue'
-import LkMetricsPanel from './components/LkMetricsPanel.vue'
-import MainlineOverview from './components/MainlineOverview.vue'
-import MetricInfoDrawer from './components/MetricInfoDrawer.vue'
-import MetricsCharts from './components/MetricsCharts.vue'
-import MetricsTables from './components/MetricsTables.vue'
 import OverviewCards from './components/OverviewCards.vue'
 import DiagramResultPanel from './components/DiagramResultPanel.vue'
 import EstimationResultPanel from './components/EstimationResultPanel.vue'
@@ -232,11 +127,72 @@ import ProductHero from './components/ProductHero.vue'
 import RiskPanel from './components/RiskPanel.vue'
 import WorkbenchIntro from './components/WorkbenchIntro.vue'
 import { useAnalysis } from './composables/useAnalysis'
-import { buildCsv, buildMarkdownReport } from './utils/exporters'
+import { useDesktopWindow } from './composables/useDesktopWindow'
+import { useTheme } from './composables/useTheme'
+
+const MetricsCharts = defineAsyncComponent(() => import('./components/MetricsCharts.vue'))
+const MetricsTables = defineAsyncComponent(() => import('./components/MetricsTables.vue'))
+const LkMetricsPanel = defineAsyncComponent(() => import('./components/LkMetricsPanel.vue'))
+const DesignMetricsPanel = defineAsyncComponent(() => import('./components/DesignMetricsPanel.vue'))
+const EstimationPanel = defineAsyncComponent(() => import('./components/EstimationPanel.vue'))
+const MetricInfoDrawer = defineAsyncComponent(() => import('./components/MetricInfoDrawer.vue'))
 
 const healthStatus = ref('checking')
-const recognitionStatus = ref('checking')
-const { loading, result, error, runTextAnalysis, runFileAnalysis, runFolderAnalysis } = useAnalysis()
+const workspace = ref('code')
+const codeMode = ref('text')
+const hostUnavailable = ref(!hasDesktopHost())
+const { theme, toggleTheme } = useTheme()
+const {
+  loading,
+  result,
+  error,
+  runTextAnalysis,
+  runSingleFileAnalysis,
+  runMultiFileAnalysis,
+  runFolderAnalysis,
+  runDesignAnalysis,
+  runEstimationAnalysis,
+  runUseCasePointAnalysis
+} = useAnalysis()
+const {
+  isMaximized,
+  minimizeWindow,
+  toggleMaximizeWindow,
+  closeWindow,
+  showAppMenu
+} = useDesktopWindow(computed(() => !hostUnavailable.value))
+
+const codeMetrics = computed(() => result.value?.codeMetrics ?? null)
+const designMetrics = computed(() => result.value?.designMetrics ?? null)
+const estimationMetrics = computed(() => result.value?.estimationMetrics ?? null)
+const classMetrics = computed(() => codeMetrics.value?.classMetrics ?? [])
+const methodMetrics = computed(() => codeMetrics.value?.methodMetrics ?? [])
+const lkSummary = computed(() => codeMetrics.value?.lkSummary ?? null)
+const riskFindings = computed(() => result.value?.riskFindings ?? [])
+const useCaseDefaults = computed(() => {
+  if (!designMetrics.value?.available || !String(designMetrics.value.diagramType || '').includes('use-case')) {
+    return null
+  }
+
+  return {
+    actorCount: designMetrics.value.actorCount ?? 0,
+    useCaseCount: designMetrics.value.useCaseCount ?? 0
+  }
+})
+const statusClass = computed(() => {
+  if (healthStatus.value === 'UP') {
+    return 'is-up'
+  }
+
+  if (healthStatus.value === 'checking') {
+    return 'is-checking'
+  }
+
+  return 'is-down'
+})
+const toggleLabel = computed(() => (
+  theme.value === 'dark' ? '切换到亮色主题' : '切换到暗色主题'
+))
 
 const structuredType = ref('class')
 const imageType = ref('class')
@@ -297,19 +253,18 @@ const estimationTrackStatus = computed(() => {
 })
 
 onMounted(async () => {
-  await Promise.all([loadBackendHealth(), loadRecognitionStatus()])
-})
+  if (hostUnavailable.value) {
+    healthStatus.value = 'UNAVAILABLE'
+    return
+  }
 
-function handleWorkbenchSelect(targetId) {
-  const target = document.getElementById(targetId)
-  target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-async function loadBackendHealth() {
   try {
     const response = await checkHealth()
     healthStatus.value = response.data.status
-  } catch {
+  } catch (runtimeError) {
+    if (!hasDesktopHost()) {
+      hostUnavailable.value = true
+    }
     healthStatus.value = 'UNAVAILABLE'
   }
 }
@@ -415,42 +370,27 @@ async function runEstimation() {
   }
 }
 
-function downloadBlob(filename, content, type) {
-  const blob = new Blob([content], { type })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(link.href)
+function hasDesktopHost() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return Boolean(window.metricsDesktop && typeof window.metricsDesktop.getAppStatus === 'function')
 }
 
-function downloadCsv() {
-  if (!hasAnyTrackData.value) {
+async function downloadCsv() {
+  if (!result.value) {
     return
   }
-  downloadBlob(
-    'metrics-report.csv',
-    buildCsv({
-      codeResult: result.value,
-      diagramResult: diagramResult.value,
-      estimationResult: estimationResult.value
-    }),
-    'text/csv'
-  )
+
+  await exportCsv(result.value)
 }
 
-function downloadMarkdown() {
-  if (!hasAnyTrackData.value) {
+async function downloadMarkdown() {
+  if (!result.value) {
     return
   }
-  downloadBlob(
-    'metrics-report.md',
-    buildMarkdownReport({
-      codeResult: result.value,
-      diagramResult: diagramResult.value,
-      estimationResult: estimationResult.value
-    }),
-    'text/markdown'
-  )
+
+  await exportMarkdown(result.value)
 }
 </script>

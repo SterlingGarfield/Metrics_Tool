@@ -42,7 +42,7 @@ class MetricsControllerMultipartTest {
 
         mockMvc.perform(multipart("/api/metrics/analyze/folder").file(good).file(bad).file(paths))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.projectSummary.totalFiles").value(2))
+            .andExpect(jsonPath("$.codeMetrics.projectSummary.totalFiles").value(2))
             .andExpect(jsonPath("$.parseIssues.length()").value(1));
     }
 }

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Metrics Tool Desktop</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #07131d;
+        --panel: rgba(14, 32, 47, 0.9);
+        --accent: #4fd1c5;
+        --text: #e7f4ff;
+        --muted: #8eb6cf;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, rgba(79, 209, 197, 0.18), transparent 50%),
+          linear-gradient(180deg, #0a1823 0%, var(--bg) 100%);
+        font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+        color: var(--text);
+      }
+
+      .panel {
+        width: min(320px, calc(100vw - 48px));
+        padding: 28px 24px;
+        border-radius: 20px;
+        background: var(--panel);
+        border: 1px solid rgba(143, 181, 205, 0.18);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 22px;
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .meta {
+        margin-top: 16px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .actions {
+        display: none;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .actions.visible {
+        display: flex;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .primary {
+        background: var(--accent);
+        color: #06202d;
+      }
+
+      .secondary {
+        background: rgba(143, 181, 205, 0.14);
+        color: var(--text);
+      }
+
+      .pulse {
+        width: 12px;
+        height: 12px;
+        margin-bottom: 16px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 0 rgba(79, 209, 197, 0.5);
+        animation: pulse 1.8s infinite;
+      }
+
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(79, 209, 197, 0.45); }
+        70% { box-shadow: 0 0 0 16px rgba(79, 209, 197, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(79, 209, 197, 0); }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="panel">
+      <div class="pulse" id="pulse"></div>
+      <h1 id="title">Metrics Tool 正在启动</h1>
+      <p id="message">正在装载桌面工作区与本地分析桥接，请稍候。</p>
+      <p class="meta" id="meta">启动阶段：初始化</p>
+      <div class="actions" id="actions">
+        <button type="button" class="primary" id="retry">重试启动</button>
+        <button type="button" class="secondary" id="open-logs">打开日志目录</button>
+      </div>
+    </section>
+    <script>
+      const title = document.getElementById('title')
+      const message = document.getElementById('message')
+      const meta = document.getElementById('meta')
+      const actions = document.getElementById('actions')
+      const pulse = document.getElementById('pulse')
+      const retryButton = document.getElementById('retry')
+      const openLogsButton = document.getElementById('open-logs')
+
+      function render(state) {
+        if (!state) {
+          return
+        }
+
+        meta.textContent = `启动阶段：${state.stage || '初始化'}`
+        message.textContent = state.message || '正在准备桌面工作区。'
+
+        if (state.status === 'failed') {
+          title.textContent = 'Metrics Tool 启动失败'
+          pulse.style.background = '#ff8f70'
+          actions.classList.add('visible')
+          return
+        }
+
+        title.textContent = state.status === 'ready'
+          ? 'Metrics Tool 已准备完成'
+          : 'Metrics Tool 正在启动'
+        pulse.style.background = '#4fd1c5'
+        actions.classList.remove('visible')
+      }
+
+      retryButton.addEventListener('click', async () => {
+        await window.metricsDesktopSplash.retryBoot()
+      })
+
+      openLogsButton.addEventListener('click', async () => {
+        await window.metricsDesktopSplash.openLogs()
+      })
+
+      window.metricsDesktopSplash.getBootState().then(render)
+      window.metricsDesktopSplash.onBootStateChanged(render)
+    </script>
+  </body>
+</html>

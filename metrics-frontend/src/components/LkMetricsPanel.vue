@@ -1,63 +1,43 @@
 <template>
-  <section class="panel">
-    <header class="result-heading">
-      <p class="result-kicker">LK 指标</p>
-      <h2>LK 课程对齐概览</h2>
-      <p class="result-lede">
-        将当前结果按课程防守材料里的 LK 口径重新组织，便于和导出报告统一查看。
-      </p>
-    </header>
-
-    <section class="lk-grid">
-      <article v-for="item in metricCards" :key="item.label" class="lk-card">
-        <span>{{ item.label }}</span>
-        <strong>{{ item.value }}</strong>
-      </article>
-    </section>
-
-    <div class="lk-evidence">
-      <p class="lk-evidence__title"><strong>继承深度分布</strong></p>
-      <p>{{ formatDistribution(lkMetrics.inheritanceDepthDistribution) }}</p>
-      <p class="lk-note">
-        结合 CK 明细表以及导出的 Markdown / CSV 报告，一起呈现课程对齐结果。
+  <section class="panel results-section">
+    <div class="results-section-heading">
+      <p class="results-section-kicker">LK</p>
+      <h2>LK 指标视图</h2>
+      <p class="results-section-copy">
+        单独整理继承层次下的新增、覆写与特化程度，方便课程答辩时解释 LK 补齐项。
       </p>
     </div>
+
+    <section class="card-grid">
+      <article class="metric-card">
+        <span>项目平均新增方法数</span>
+        <strong>{{ formatNumber(summary.averageAddedMethodCount) }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>项目平均覆写方法数</span>
+        <strong>{{ formatNumber(summary.averageOverriddenMethodCount) }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>最大特化指数</span>
+        <strong>{{ formatNumber(summary.maxSpecializationIndex) }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>有继承关系的类数量</span>
+        <strong>{{ summary.inheritanceClassCount ?? 0 }}</strong>
+      </article>
+    </section>
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-
-const props = defineProps({
-  lkMetrics: {
+defineProps({
+  summary: {
     type: Object,
     required: true
   }
 })
 
-const metricCards = computed(() => [
-  { label: '类总数', value: formatValue(props.lkMetrics.classCount) },
-  { label: '方法总数', value: formatValue(props.lkMetrics.methodCount) },
-  { label: '属性总数', value: formatValue(props.lkMetrics.attributeCount) },
-  { label: '关系总数', value: formatValue(props.lkMetrics.relationshipCount) },
-  { label: '平均每类方法数', value: formatValue(props.lkMetrics.averageMethodsPerClass) },
-  { label: '平均每类属性数', value: formatValue(props.lkMetrics.averageAttributesPerClass) },
-  { label: '关系密度', value: formatValue(props.lkMetrics.relationDensity) }
-])
-
-function formatValue(value) {
-  if (value === null || value === undefined) {
-    return '暂无数据'
-  }
-  return typeof value === 'number' && !Number.isInteger(value)
-    ? value.toFixed(2)
-    : String(value)
-}
-
-function formatDistribution(values) {
-  if (!Array.isArray(values) || values.length === 0) {
-    return '[]'
-  }
-  return `[${values.join(', ')}]`
+function formatNumber(value) {
+  return Number(value ?? 0).toFixed(2)
 }
 </script>
