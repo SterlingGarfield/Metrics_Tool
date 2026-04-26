@@ -4,7 +4,7 @@
       <p class="results-section-kicker">趋势</p>
       <h2>复杂度趋势</h2>
       <p class="results-section-copy">
-        按方法展示圈复杂度最高的条目，便于快速识别最需要优化的热点代码。
+        先看方法层面的复杂度高点，图表区域保持清爽，方便快速识别需要优先处理的热点。
       </p>
     </div>
     <div ref="complexityChart" class="chart-surface"></div>
@@ -12,13 +12,22 @@
 </template>
 
 <script setup>
-import * as echarts from 'echarts'
-import { nextTick, onMounted, ref, watch } from 'vue'
+import * as echarts from 'echarts/core'
+import { BarChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
+echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 
 const props = defineProps({
   methodMetrics: {
     type: Array,
     required: true
+  },
+  theme: {
+    type: String,
+    default: 'light'
   }
 })
 
@@ -31,16 +40,18 @@ async function renderChart() {
     return
   }
   chart ??= echarts.init(complexityChart.value)
+  const themeStyles = getComputedStyle(document.documentElement)
   const topMethods = [...props.methodMetrics]
     .sort((a, b) => b.cyclomaticComplexity - a.cyclomaticComplexity)
     .slice(0, 10)
+
   chart.setOption({
     backgroundColor: 'transparent',
     tooltip: {
-      backgroundColor: 'rgba(7, 16, 29, 0.92)',
-      borderColor: 'rgba(255, 255, 255, 0.16)',
+      backgroundColor: themeStyles.getPropertyValue('--chart-tooltip-bg').trim(),
+      borderColor: themeStyles.getPropertyValue('--chart-tooltip-border').trim(),
       textStyle: {
-        color: '#f5e8c7'
+        color: themeStyles.getPropertyValue('--chart-text').trim()
       }
     },
     grid: {
@@ -53,23 +64,23 @@ async function renderChart() {
       type: 'category',
       data: topMethods.map((item) => item.methodName),
       axisLabel: {
-        color: 'rgba(245, 232, 199, 0.82)',
+        color: themeStyles.getPropertyValue('--chart-text-soft').trim(),
         rotate: 24
       },
       axisLine: {
         lineStyle: {
-          color: 'rgba(255, 255, 255, 0.2)'
+          color: themeStyles.getPropertyValue('--chart-axis').trim()
         }
       }
     },
     yAxis: {
       type: 'value',
       axisLabel: {
-        color: 'rgba(245, 232, 199, 0.82)'
+        color: themeStyles.getPropertyValue('--chart-text-soft').trim()
       },
       splitLine: {
         lineStyle: {
-          color: 'rgba(255, 255, 255, 0.08)'
+          color: themeStyles.getPropertyValue('--chart-grid').trim()
         }
       }
     },
@@ -77,12 +88,20 @@ async function renderChart() {
       {
         type: 'bar',
         data: topMethods.map((item) => item.cyclomaticComplexity),
-        itemStyle: { color: '#c45b2d', borderRadius: [8, 8, 0, 0] }
+        itemStyle: {
+          color: themeStyles.getPropertyValue('--chart-bar').trim(),
+          borderRadius: [10, 10, 0, 0]
+        }
       }
     ]
   })
 }
 
 onMounted(renderChart)
+onBeforeUnmount(() => {
+  chart?.dispose()
+  chart = undefined
+})
 watch(() => props.methodMetrics, renderChart, { deep: true })
+watch(() => props.theme, renderChart)
 </script>

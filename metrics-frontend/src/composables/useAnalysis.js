@@ -1,5 +1,14 @@
 import { ref } from 'vue'
-import { analyzeFiles, analyzeFolder, analyzeText } from '../api/metrics'
+import {
+  analyzeDesign,
+  analyzeEstimation,
+  analyzeUseCasePoints,
+  analyzeFiles,
+  analyzeFolder,
+  analyzeText,
+  selectFiles,
+  selectFolder
+} from '../api/metrics'
 
 export function useAnalysis() {
   const loading = ref(false)
@@ -19,17 +28,84 @@ export function useAnalysis() {
     }
   }
 
+  function hasSelection(selection) {
+    if (!selection) {
+      return false
+    }
+
+    if (Array.isArray(selection)) {
+      return selection.length > 0
+    }
+
+    if (Array.isArray(selection.files)) {
+      return selection.files.length > 0
+    }
+
+    return true
+  }
+
   async function runTextAnalysis(payload) {
     await runWith(() => analyzeText(payload))
   }
 
-  async function runFileAnalysis(files) {
-    await runWith(() => analyzeFiles(files))
+  async function runSingleFileAnalysis(files) {
+    const selection = hasSelection(files)
+      ? files
+      : await selectFiles({ multiple: false })
+
+    if (!hasSelection(selection)) {
+      return
+    }
+
+    await runWith(() => analyzeFiles(selection))
   }
 
-  async function runFolderAnalysis(files) {
-    await runWith(() => analyzeFolder(files))
+  async function runMultiFileAnalysis(files) {
+    const selection = hasSelection(files)
+      ? files
+      : await selectFiles({ multiple: true })
+
+    if (!hasSelection(selection)) {
+      return
+    }
+
+    await runWith(() => analyzeFiles(selection))
   }
 
-  return { loading, result, error, runTextAnalysis, runFileAnalysis, runFolderAnalysis }
+  async function runFolderAnalysis(folderSelection) {
+    const selection = hasSelection(folderSelection)
+      ? folderSelection
+      : await selectFolder()
+
+    if (!hasSelection(selection)) {
+      return
+    }
+
+    await runWith(() => analyzeFolder(selection))
+  }
+
+  async function runDesignAnalysis(payload) {
+    await runWith(() => analyzeDesign(payload))
+  }
+
+  async function runEstimationAnalysis(payload) {
+    await runWith(() => analyzeEstimation(payload))
+  }
+
+  async function runUseCasePointAnalysis(payload) {
+    await runWith(() => analyzeUseCasePoints(payload))
+  }
+
+  return {
+    loading,
+    result,
+    error,
+    runTextAnalysis,
+    runSingleFileAnalysis,
+    runMultiFileAnalysis,
+    runFolderAnalysis,
+    runDesignAnalysis,
+    runEstimationAnalysis,
+    runUseCasePointAnalysis
+  }
 }

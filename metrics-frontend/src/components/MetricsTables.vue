@@ -1,10 +1,10 @@
 <template>
   <section class="panel results-section table-stack">
     <div class="results-section-heading">
-      <p class="results-section-kicker">明细</p>
+      <p class="results-section-kicker">Details</p>
       <h2>类级指标</h2>
       <p class="results-section-copy">
-        先查看类级结构性指标，再下钻到方法级复杂度和嵌套深度细节。
+        保留类级和方法级明细，方便继续下钻到具体结构。
       </p>
     </div>
 

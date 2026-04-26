@@ -1,10 +1,10 @@
 <template>
   <section class="panel results-section risk-panel">
     <div class="results-section-heading">
-      <p class="results-section-kicker">风险</p>
+      <p class="results-section-kicker">Risks</p>
       <h2>风险焦点</h2>
       <p class="results-section-copy">
-        聚焦本轮分析中最值得优先处理的设计与复杂度风险信号。
+        把高风险项先摆到前面，方便决定下一步该修哪一段代码。
       </p>
     </div>
 

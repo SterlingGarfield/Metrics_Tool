@@ -52,11 +52,11 @@ class ClassMetricsAnalyzerTest {
         );
 
         var response = service.analyzeSources(inputs);
-        var premium = response.classMetrics().stream()
+        var premium = response.codeMetrics().classMetrics().stream()
             .filter(metric -> metric.className().equals("PremiumAccount"))
             .findFirst()
             .orElseThrow();
-        var base = response.classMetrics().stream()
+        var base = response.codeMetrics().classMetrics().stream()
             .filter(metric -> metric.className().equals("BaseAccount"))
             .findFirst()
             .orElseThrow();
@@ -67,5 +67,46 @@ class ClassMetricsAnalyzerTest {
         assertThat(premium.nom()).isEqualTo(1);
         assertThat(premium.wmc()).isEqualTo(2);
         assertThat(premium.cbo()).isGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    void analyzeSourcesComputesLkStyleInheritanceMetrics() {
+        List<SourceInput> inputs = List.of(
+            new SourceInput("demo/BaseAccount.java", """
+                package demo;
+                public class BaseAccount {
+                    protected int balance;
+
+                    public void deposit(int amount) {
+                        balance += amount;
+                    }
+                }
+                """),
+            new SourceInput("demo/SavingsAccount.java", """
+                package demo;
+                public class SavingsAccount extends BaseAccount {
+                    @Override
+                    public void deposit(int amount) {
+                        if (amount > 0) {
+                            balance += amount;
+                        }
+                    }
+
+                    public void applyInterest() {
+                        balance += 10;
+                    }
+                }
+                """)
+        );
+
+        var response = service.analyzeSources(inputs);
+        var savings = response.codeMetrics().classMetrics().stream()
+            .filter(metric -> metric.className().equals("SavingsAccount"))
+            .findFirst()
+            .orElseThrow();
+
+        assertThat(savings.addedMethodCount()).isEqualTo(1);
+        assertThat(savings.overriddenMethodCount()).isEqualTo(1);
+        assertThat(savings.specializationIndex()).isEqualTo(0.5);
     }
 }

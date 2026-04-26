@@ -31,11 +31,18 @@ class MetricsAnalysisServiceTest {
 
         AnalysisResponse response = service.analyzeText(new TextAnalyzeRequest("Sample.java", source));
 
-        assertThat(response.projectSummary().totalFiles()).isEqualTo(1);
-        assertThat(response.projectSummary().totalClasses()).isEqualTo(1);
-        assertThat(response.projectSummary().totalMethods()).isEqualTo(1);
-        assertThat(response.methodMetrics()).hasSize(1);
-        assertThat(response.methodMetrics().get(0).cyclomaticComplexity()).isEqualTo(2);
+        assertThat(response.codeMetrics()).isNotNull();
+        assertThat(response.designMetrics()).isNotNull();
+        assertThat(response.estimationMetrics()).isNotNull();
+        assertThat(response.codeMetrics().projectSummary().totalFiles()).isEqualTo(1);
+        assertThat(response.codeMetrics().projectSummary().totalClasses()).isEqualTo(1);
+        assertThat(response.codeMetrics().projectSummary().totalMethods()).isEqualTo(1);
+        assertThat(response.codeMetrics().methodMetrics()).hasSize(1);
+        assertThat(response.codeMetrics().methodMetrics().get(0).cyclomaticComplexity()).isEqualTo(2);
+        assertThat(response.codeMetrics().lkSummary()).isNotNull();
+        assertThat(response.codeMetrics().lkSummary().inheritanceClassCount()).isEqualTo(0);
         assertThat(response.parseIssues()).isEmpty();
+        assertThat(response.designMetrics().available()).isFalse();
+        assertThat(response.estimationMetrics().available()).isFalse();
     }
 }

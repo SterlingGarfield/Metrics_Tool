@@ -5,3 +5,6 @@ dist/
 metrics-backend/target/
 metrics-backend/src/main/resources/static/
 .worktrees/
+metrics-desktop/node_modules/
+metrics-desktop/dist/
+metrics-desktop/staged/

@@ -27,21 +27,27 @@ public class ClassMetricsAnalyzer {
     public List<ClassMetrics> analyze(List<SourceInput> inputs, Map<String, CompilationUnit> compilationUnits, List<MethodMetrics> methodMetrics) {
         Map<String, Integer> childrenCount = new HashMap<>();
         Map<String, String> parentByClass = new HashMap<>();
+        Map<String, Set<String>> declaredMethodSignatures = new HashMap<>();
 
         for (CompilationUnit unit : compilationUnits.values()) {
             unit.accept(new ASTVisitor() {
                 @Override
                 public boolean visit(TypeDeclaration node) {
                     if (node.getSuperclassType() != null) {
-                        String parent = node.getSuperclassType().toString();
+                        String parent = simpleClassName(node.getSuperclassType().toString());
                         parentByClass.put(node.getName().getIdentifier(), parent);
                         childrenCount.merge(parent, 1, Integer::sum);
                     }
+                    declaredMethodSignatures.put(
+                        node.getName().getIdentifier(),
+                        extractMethodSignatures(node)
+                    );
                     return true;
                 }
             });
         }
 
+        Map<String, Set<String>> inheritedMethodCache = new HashMap<>();
         List<ClassMetrics> results = new ArrayList<>();
         for (SourceInput input : inputs) {
             CompilationUnit unit = compilationUnits.get(input.fileName());
@@ -85,6 +91,20 @@ public class ClassMetricsAnalyzer {
                     int dit = computeDit(className, parentByClass);
                     int noc = childrenCount.getOrDefault(className, 0);
                     int lcom = computeLcom(node);
+                    Set<String> ownMethodSignatures = declaredMethodSignatures.getOrDefault(className, Set.of());
+                    Set<String> inheritedSignatures = collectInheritedMethodSignatures(
+                        className,
+                        parentByClass,
+                        declaredMethodSignatures,
+                        inheritedMethodCache
+                    );
+                    int overriddenMethodCount = (int) ownMethodSignatures.stream()
+                        .filter(inheritedSignatures::contains)
+                        .count();
+                    int addedMethodCount = Math.max(ownMethodSignatures.size() - overriddenMethodCount, 0);
+                    double specializationIndex = nom == 0
+                        ? 0.0
+                        : (double) overriddenMethodCount * Math.max(dit, 1) / Math.max(nom, 1);
 
                     results.add(new ClassMetrics(
                         input.fileName(),
@@ -99,6 +119,9 @@ public class ClassMetricsAnalyzer {
                         nom,
                         noa,
                         publicMethodCount,
+                        addedMethodCount,
+                        overriddenMethodCount,
+                        specializationIndex,
                         0.0,
                         false
                     ));
@@ -153,5 +176,50 @@ public class ClassMetricsAnalyzer {
             }
         });
         return fields;
+    }
+
+    private Set<String> extractMethodSignatures(TypeDeclaration node) {
+        Set<String> signatures = new HashSet<>();
+        for (MethodDeclaration method : node.getMethods()) {
+            if (!method.isConstructor()) {
+                signatures.add(buildMethodSignature(method));
+            }
+        }
+        return signatures;
+    }
+
+    private Set<String> collectInheritedMethodSignatures(
+        String className,
+        Map<String, String> parentByClass,
+        Map<String, Set<String>> declaredMethodSignatures,
+        Map<String, Set<String>> cache
+    ) {
+        if (cache.containsKey(className)) {
+            return cache.get(className);
+        }
+
+        String parent = parentByClass.get(className);
+        if (parent == null || "Object".equals(parent)) {
+            Set<String> empty = Set.of();
+            cache.put(className, empty);
+            return empty;
+        }
+
+        Set<String> inherited = new HashSet<>(declaredMethodSignatures.getOrDefault(parent, Set.of()));
+        inherited.addAll(collectInheritedMethodSignatures(parent, parentByClass, declaredMethodSignatures, cache));
+        cache.put(className, inherited);
+        return inherited;
+    }
+
+    private String buildMethodSignature(MethodDeclaration method) {
+        return method.getName().getIdentifier() + "#" + method.parameters().size();
+    }
+
+    private String simpleClassName(String typeName) {
+        int index = typeName.lastIndexOf('.');
+        if (index < 0) {
+            return typeName;
+        }
+        return typeName.substring(index + 1);
     }
 }

@@ -1,10 +1,10 @@
 <template>
   <section class="panel results-section results-section-summary">
     <div class="results-section-heading">
-      <p class="results-section-kicker">概览</p>
-      <h2>本次分析概览</h2>
+      <p class="results-section-kicker">Snapshot</p>
+      <h2>分析摘要</h2>
       <p class="results-section-copy">
-        汇总本轮分析的核心规模数据，帮助你快速判断本次输入覆盖范围与代码体量。
+        先看规模，再判断这次分析需要把注意力放在哪里。
       </p>
     </div>
 

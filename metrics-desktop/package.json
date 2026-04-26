@@ -1,0 +1,21 @@
+{
+  "name": "metrics-desktop",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Windows desktop shell for Metrics Tool",
+  "main": "src/main/index.cjs",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "generate-icons": "powershell -ExecutionPolicy Bypass -File scripts/generate-brand-icons.ps1",
+    "check": "node --check src/main/index.cjs && node --check src/main/ipc.cjs && node --check src/main/analyzer.cjs && node --check src/main/fs-sources.cjs && node --check src/main/runtime-paths.cjs && node --check src/main/logger.cjs && node --check src/main/boot-state.cjs && node --check src/main/window-lifecycle.cjs && node --check src/main/workspace-launch.cjs && node --check src/main/desktop-window.cjs && node --check src/main/app-menu.cjs && node --check src/preload/index.cjs && node --check src/preload/splash.cjs",
+    "predist": "npm run generate-icons",
+    "test": "node test/runtime-paths.test.cjs && node test/boot-state.test.cjs && node test/java-runtime.test.cjs && node test/ocr-runtime.test.cjs && node test/analyzer-worker.test.cjs && node test/window-lifecycle.test.cjs && node test/desktop-window.test.cjs && node test/app-menu.test.cjs && node test/workspace-launch.test.cjs && node test/installer-config.test.cjs && node test/brand-icon-source.test.cjs && node test/frontend-build-paths.test.cjs && node test/stage-runtime-cleanup.test.cjs",
+    "dist": "electron-builder --config electron-builder.json --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  }
+}
