@@ -1,69 +1,106 @@
-# Java Metrics Tool
+# Metrics_Tool（桌面端软件度量实验平台）
 
-## Environment
+> 面向课程实验与演示的桌面工具：代码度量、设计度量（含 OCR 辅助）与项目估算一体化工作台。
+
+![项目标识](metrics-frontend/src/assets/branding/logo-desktop.png)
+
+## 项目简介
+
+`Metrics_Tool` 采用 Electron + Vue + Spring Boot 的桌面架构，提供“输入 -> 分析 -> 结果 -> 导出”的完整流程。  
+当前重点是桌面端使用体验，支持在本地直接完成课程常见的软件度量任务，并导出报告用于答辩或提交。
+
+## 主要功能
+
+- 代码度量：支持粘贴源码、单文件、多文件、文件夹扫描
+- 指标覆盖：`WMC / CBO / RFC / LCOM / DIT / NOC / LOC / 圈复杂度 / 最大嵌套深度 / 分支数`
+- LK 指标展示：包含新增方法、覆写方法、特化指数等摘要
+- 设计度量：支持 `class / use-case / flow` 三类图
+- 设计 OCR：上传图片后可给出建议指标（支持自动识别链路）
+- 项目估算：人工估算与用例点（UCP）估算
+- 报告导出：CSV 与 Markdown
+
+![工作台示意](metrics-frontend/src/assets/branding/pig-hero.png)
+
+## 技术栈与环境要求
 
 - JDK 17
 - Maven 3.9+
 - Node.js 24
+- Windows PowerShell（推荐）
 
-## Desktop Usage
+## 快速开始（开发模式）
 
-The product is now delivered as a desktop application. Launch it from the Electron shell or build the Windows installer.
-
-## Desktop Development
+在仓库根目录执行：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\dev.ps1
 ```
 
-The script reuses `metrics-backend\target\metrics-backend-0.0.1-SNAPSHOT.jar` when it already exists; otherwise it builds the backend jar first, then starts:
+该脚本会：
 
-- the renderer dev server in `metrics-frontend`
-- the Electron shell in `metrics-desktop`
+1. 检查并按需构建后端 `jar`
+2. 启动 `metrics-frontend` 开发服务
+3. 启动 `metrics-desktop` Electron 桌面壳
 
-## Renderer Build
+## 常用命令
+
+### 前端构建
 
 ```powershell
 Set-Location .\metrics-frontend
 npm run build
 ```
 
-## Desktop Verification
+### 前端测试 + 构建验收
 
 ```powershell
 Set-Location .\metrics-frontend
 npm test -- --run
 npm run build
+```
 
+### 桌面端测试
+
+```powershell
 Set-Location ..\metrics-desktop
 npm run test
 ```
 
-## Installer Build
+### 打包安装程序
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\metrics-desktop\scripts\build-installer.ps1
 ```
 
-## Features
+## 设计度量 OCR 说明
 
-- pasted code analysis
-- single file analysis
-- multiple file analysis
-- folder scan
-- design metrics workspace for class diagrams, use-case diagrams, and flow diagrams
-- project estimation workspace with manual estimation and use case point estimation
-- project, class, method, and LK summary metrics
-- CSV and Markdown export
+- OCR 作为设计度量的辅助输入能力，不影响手工录入主流程
+- 本地运行时目录（如 `.ocr311`、`models/*`）为环境资源，不建议提交到 Git
+- 若 OCR 环境缺失，系统应退化为手工录入并保持其他功能可用
 
-## Course Requirement Mapping
+示例图（类图测试样例）：
 
-| 课程要求 | 当前功能 | 对应界面 / 接口 |
+![类图样例](metrics-backend/src/test/resources/fixtures/design/class-diagram-sample.png)
+
+## 目录结构（核心）
+
+```text
+metrics-backend/    # Spring Boot 后端与分析逻辑
+metrics-frontend/   # Vue 前端界面
+metrics-desktop/    # Electron 桌面壳与运行时桥接
+scripts/            # 开发启动脚本
+docs/               # 课程文档与设计说明
+```
+
+## 课程要求映射（简表）
+
+| 课程要求 | 当前能力 | 对应入口 |
 | --- | --- | --- |
-| 代码阶段度量 | Java AST 分析，覆盖 `WMC / CBO / RFC / LCOM / DIT / NOC` 与 `LOC / 圈复杂度 / 最大嵌套深度 / 分支数` | Desktop `代码度量` 工作区；`/api/metrics/analyze/text` |
-| LK 与 CK 相关度量点 | LK 结果区块展示平均新增方法数、平均覆写方法数、最大特化指数、有继承关系的类数量 | Desktop `LK 指标视图`；`codeMetrics.lkSummary` |
-| 设计阶段度量 | 支持 `class / use-case / flow` 手工输入，OCR 仅作辅助建议 | Desktop `设计度量` 工作区；`/api/metrics/design/analyze`、`/api/metrics/design/suggest` |
-| 设计结果课程化表达 | 结果区分原始计数、派生指标、OCR 是否参与；类图展示 `relationshipDensity`，用例图展示 `useCasesPerActor` | Desktop `设计度量结果`；`designMetrics.relationshipDensity / useCasesPerActor` |
-| 项目估算 | 展示 `LoC / 人员 / 工期 / 成本 / 工作量（人月）`，并给出生产率与单位 LoC 成本 | Desktop `项目估算 -> 人工估算`；`/api/metrics/estimation/manual` |
-| 额外度量族 | 新增 `Use Case Points`，输出 `UAW / UUCW / UUCP / UCP` | Desktop `项目估算 -> 用例点估算`；`/api/metrics/estimation/use-case-points` |
-| 报告导出 | Markdown 报告独立章节包含 `LK Metrics / Design Metrics / Project Estimation / Use Case Points` | Desktop 导出按钮；renderer `exporters.js` |
+| 代码阶段度量 | Java AST 指标分析与风险提示 | 代码度量工作区 |
+| 设计阶段度量 | 类图 / 用例图 / 流程图计数与派生指标 | 设计度量工作区 |
+| 项目估算 | 人工估算 + UCP 估算 | 项目估算工作区 |
+| 结果可交付 | CSV / Markdown 导出 | 结果区导出按钮 |
+
+## 许可与说明
+
+本仓库用于教学与实验用途。若用于正式项目，请根据课程与组织规范补充许可证、隐私和合规说明。
