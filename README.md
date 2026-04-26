@@ -2,8 +2,6 @@
 
 > 面向课程实验与演示的桌面工具：代码度量、设计度量（含 OCR 辅助）与项目估算一体化工作台。
 
-![项目标识](metrics-frontend/src/assets/branding/logo-desktop.png)
-
 ## 项目简介
 
 `Metrics_Tool` 采用 Electron + Vue + Spring Boot 的桌面架构，提供“输入 -> 分析 -> 结果 -> 导出”的完整流程。  
@@ -18,8 +16,6 @@
 - 设计 OCR：上传图片后可给出建议指标（支持自动识别链路）
 - 项目估算：人工估算与用例点（UCP）估算
 - 报告导出：CSV 与 Markdown
-
-![工作台示意](metrics-frontend/src/assets/branding/pig-hero.png)
 
 ## 技术栈与环境要求
 
@@ -77,10 +73,6 @@ powershell -ExecutionPolicy Bypass -File .\metrics-desktop\scripts\build-install
 - OCR 作为设计度量的辅助输入能力，不影响手工录入主流程
 - 本地运行时目录（如 `.ocr311`、`models/*`）为环境资源，不建议提交到 Git
 - 若 OCR 环境缺失，系统应退化为手工录入并保持其他功能可用
-
-示例图（类图测试样例）：
-
-![类图样例](metrics-backend/src/test/resources/fixtures/design/class-diagram-sample.png)
 
 ## 目录结构（核心）
 
