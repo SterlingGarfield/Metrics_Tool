@@ -30,7 +30,8 @@
         :aria-label="item.label"
         @click="emit('update:workspace', item.key)"
       >
-        {{ item.label }}
+        <span class="mode-toggle__label">{{ item.label }}</span>
+        <span class="mode-toggle__hint" aria-hidden="true">{{ item.hint }}</span>
       </button>
     </div>
 

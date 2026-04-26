@@ -1,0 +1,14 @@
+@startuml
+class Book {
+  -title : String
+  +getTitle() : String
+}
+class Author {
+  -name : String
+}
+interface Catalog {
+  +findByTitle(title : String) : Book
+}
+Book --> Author : written by
+Catalog ..> Book : returns
+@enduml

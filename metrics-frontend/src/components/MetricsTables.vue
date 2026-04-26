@@ -43,7 +43,7 @@
       </thead>
       <tbody>
         <tr v-for="item in methodMetrics" :key="item.className + item.methodName">
-          <td>{{ item.className }}#{{ item.methodName }}</td>
+          <td>{{ item.className }} · {{ item.methodName }}</td>
           <td>{{ item.cyclomaticComplexity }}</td>
           <td>{{ item.loc }}</td>
           <td>{{ item.maxNestingDepth }}</td>

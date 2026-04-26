@@ -64,6 +64,9 @@ describe('InputWorkspace', () => {
       fileName: 'Snippet.java',
       sourceCode: 'public class Demo {}'
     })
+    expect(emitted()['submit-file'][0][0]).toEqual([singleFile])
+    expect(emitted()['submit-files'][0][0]).toEqual([fileA, fileB])
+    expect(emitted()['submit-folder'][0][0]).toEqual([folderFile])
   })
 
   test('renders only the requested workspace when switchers are hidden', async () => {

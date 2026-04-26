@@ -1,6 +1,6 @@
 # Report Outline
 
-## 1. Requirement Analysis
+## 1. Project Requirement Analysis
 
 - course requirement mapping table
 - software metrics automation tool goals
@@ -23,7 +23,7 @@
 - project stage: LoC / workload / cost / time / staff + use case points
 - visualization and export modules
 
-## 4. Result Analysis
+## 4. Result Analysis And Evaluation
 
 - sample project metrics
 - LK Metrics section
@@ -33,8 +33,17 @@
 - accuracy comparison against expected values
 - usability and effectiveness discussion
 
-## 5. Improvement Suggestions
+## 5. Improvement Plan
 
-- known limitations
-- next-step metrics
-- future tooling extensions
+- Runtime hardening and dependency reproducibility improvements
+- Metric coverage expansion (optional additional methods)
+- Recognition robustness upgrades and better calibration
+- Future integration and report automation enhancements
+
+## 6. Course Alignment Appendix
+
+- Defense walkthrough: `docs/course-defense-demo.zh-CN.md`
+- Defense evidence index: `docs/course-evidence-index.zh-CN.md`
+- Course requirement matrix: `docs/course-requirement-matrix.zh-CN.md`
+- LK course-aligned mapping: `docs/lk-course-alignment.zh-CN.md`
+- Metric dictionary and formulas: `docs/metric-definitions.md`

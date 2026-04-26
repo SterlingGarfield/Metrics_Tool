@@ -5,6 +5,11 @@ vi.mock('../../api/metrics', () => ({
   selectFiles: vi.fn().mockResolvedValue([]),
   selectFolder: vi.fn().mockResolvedValue(null),
   checkHealth: vi.fn().mockResolvedValue({ data: { status: 'UP' } }),
+  checkRecognitionHealth: vi.fn().mockResolvedValue({ data: { status: 'UP' } }),
+  fetchModelsStatus: vi.fn().mockResolvedValue({ data: { ready: true } }),
+  analyzeStructuredDiagram: vi.fn(),
+  analyzeImageDiagram: vi.fn(),
+  estimateProject: vi.fn(),
   analyzeText: vi.fn().mockResolvedValue({
     data: {
       codeMetrics: {

@@ -1,0 +1,13 @@
+@startuml
+left to right direction
+actor Student
+actor Technician
+usecase "Submit Repair Request" as UC1
+usecase "Assign Technician" as UC2
+usecase "Track Progress" as UC3
+Student --> UC1
+Student --> UC3
+Technician --> UC2
+UC1 ..> UC2 : <<include>>
+UC3 ..> UC1 : <<extend>>
+@enduml

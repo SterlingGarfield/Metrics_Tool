@@ -121,7 +121,11 @@ import DesktopSidebar from './components/DesktopSidebar.vue'
 import DesktopTitleBar from './components/DesktopTitleBar.vue'
 import InputWorkspace from './components/InputWorkspace.vue'
 import OverviewCards from './components/OverviewCards.vue'
+import DiagramResultPanel from './components/DiagramResultPanel.vue'
+import EstimationResultPanel from './components/EstimationResultPanel.vue'
+import ProductHero from './components/ProductHero.vue'
 import RiskPanel from './components/RiskPanel.vue'
+import WorkbenchIntro from './components/WorkbenchIntro.vue'
 import { useAnalysis } from './composables/useAnalysis'
 import { useDesktopWindow } from './composables/useDesktopWindow'
 import { useTheme } from './composables/useTheme'
@@ -190,6 +194,64 @@ const toggleLabel = computed(() => (
   theme.value === 'dark' ? '切换到亮色主题' : '切换到暗色主题'
 ))
 
+const structuredType = ref('class')
+const imageType = ref('class')
+const structuredFile = ref(null)
+const imageFile = ref(null)
+const diagramLoading = ref(false)
+const diagramError = ref('')
+const diagramResult = ref(null)
+
+const estimationLoading = ref(false)
+const estimationError = ref('')
+const estimationResult = ref(null)
+const estimateForm = ref({
+  estimationMethod: 'ucp',
+  diagramType: 'class',
+  totalLoc: null,
+  classCount: null,
+  relationshipCount: null,
+  useCaseCount: null,
+  decisionNodeCount: null,
+  simpleActorCount: null,
+  averageActorCount: null,
+  complexActorCount: null,
+  simpleUseCaseCount: null,
+  averageUseCaseCount: null,
+  complexUseCaseCount: null,
+  technicalComplexityFactor: null,
+  environmentalFactor: null,
+  externalInputCount: null,
+  externalOutputCount: null,
+  externalInquiryCount: null,
+  internalLogicalFileCount: null,
+  externalInterfaceFileCount: null,
+  valueAdjustmentFactor: null,
+  costRatePerPersonMonth: 15000,
+  targetScheduleMonths: 2
+})
+
+const resolvedLkMetrics = computed(() => result.value?.codeMetrics?.lkMetrics || result.value?.codeMetrics?.lkPresentation || null)
+const hasAnyTrackData = computed(() => !!(result.value || diagramResult.value || estimationResult.value))
+const codeTrackStatus = computed(() => {
+  if (loading.value) {
+    return 'running'
+  }
+  return result.value ? 'ready' : 'idle'
+})
+const diagramTrackStatus = computed(() => {
+  if (diagramLoading.value) {
+    return 'running'
+  }
+  return diagramResult.value ? 'ready' : 'idle'
+})
+const estimationTrackStatus = computed(() => {
+  if (estimationLoading.value) {
+    return 'running'
+  }
+  return estimationResult.value ? 'ready' : 'idle'
+})
+
 onMounted(async () => {
   if (hostUnavailable.value) {
     healthStatus.value = 'UNAVAILABLE'
@@ -205,7 +267,108 @@ onMounted(async () => {
     }
     healthStatus.value = 'UNAVAILABLE'
   }
-})
+}
+
+async function loadRecognitionStatus() {
+  try {
+    const [healthResponse, modelsResponse] = await Promise.all([checkRecognitionHealth(), fetchModelsStatus()])
+    const base = healthResponse.data?.status ?? 'UNKNOWN'
+    const ready = modelsResponse.data?.ready === true ? 'READY' : 'NOT_READY'
+    recognitionStatus.value = `${base} / ${ready}`
+  } catch {
+    recognitionStatus.value = 'UNAVAILABLE'
+  }
+}
+
+async function handleSubmitText(payload) {
+  await runTextAnalysis(payload)
+  hydrateEstimateDefaults()
+}
+
+async function handleSubmitFile(files) {
+  await runFileAnalysis(files)
+  hydrateEstimateDefaults()
+}
+
+async function handleSubmitFolder(files) {
+  await runFolderAnalysis(files)
+  hydrateEstimateDefaults()
+}
+
+function hydrateEstimateDefaults() {
+  const summary = result.value?.projectSummary
+  const classes = result.value?.classMetrics
+  if (!summary) {
+    return
+  }
+  estimateForm.value.totalLoc = summary.totalLoc
+  estimateForm.value.classCount = summary.totalClasses
+  if (Array.isArray(classes)) {
+    const relationshipCount = classes.reduce((acc, item) => acc + (item.cbo || 0), 0)
+    estimateForm.value.relationshipCount = relationshipCount
+  }
+}
+
+function onStructuredFileChange(event) {
+  structuredFile.value = event.target.files?.[0] || null
+}
+
+function onImageFileChange(event) {
+  imageFile.value = event.target.files?.[0] || null
+}
+
+async function runStructured() {
+  if (!structuredFile.value) {
+    diagramError.value = '请选择结构化设计图文件。'
+    return
+  }
+  diagramLoading.value = true
+  diagramError.value = ''
+  try {
+    const response = await analyzeStructuredDiagram(structuredFile.value, structuredType.value)
+    diagramResult.value = response.data.diagramAnalysis || response.data
+  } catch (err) {
+    diagramError.value = err?.response?.data?.message || err?.message || '结构化设计图分析失败'
+  } finally {
+    diagramLoading.value = false
+  }
+}
+
+async function runImage() {
+  if (!imageFile.value) {
+    diagramError.value = '请选择设计图图片文件。'
+    return
+  }
+  diagramLoading.value = true
+  diagramError.value = ''
+  try {
+    const response = await analyzeImageDiagram(imageFile.value, imageType.value)
+    diagramResult.value = response.data.diagramAnalysis || response.data
+  } catch (err) {
+    diagramError.value = err?.response?.data?.message || err?.message || '设计图图片分析失败'
+  } finally {
+    diagramLoading.value = false
+  }
+}
+
+async function runEstimation() {
+  estimationLoading.value = true
+  estimationError.value = ''
+  try {
+    const payload = {
+      ...estimateForm.value,
+      relationshipCount: estimateForm.value.relationshipCount ?? diagramResult.value?.relations?.length ?? 0,
+      useCaseCount: estimateForm.value.useCaseCount ?? 0,
+      decisionNodeCount: estimateForm.value.decisionNodeCount ?? 0
+    }
+    const response = await estimateProject(payload)
+    estimationResult.value = response.data.projectEstimation || response.data
+  } catch (err) {
+    estimationError.value = err?.response?.data?.message || err?.message || '项目估算失败'
+  } finally {
+    estimationLoading.value = false
+  }
+}
 
 function hasDesktopHost() {
   if (typeof window === 'undefined') {

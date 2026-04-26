@@ -79,4 +79,14 @@ defineProps({
     required: true
   }
 })
+
+function formatScope(scope) {
+  const scopeMap = {
+    class: '类',
+    method: '方法',
+    file: '文件',
+    project: '项目'
+  }
+  return scopeMap[scope] || scope
+}
 </script>

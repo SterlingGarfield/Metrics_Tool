@@ -38,6 +38,18 @@ export function getAppStatus() {
   return callDesktopBridge('getAppStatus')
 }
 
+const designClient = axios.create({
+  baseURL: '/api/design'
+})
+
+const recognitionClient = axios.create({
+  baseURL: '/api/recognition'
+})
+
+const estimationClient = axios.create({
+  baseURL: '/api/estimate'
+})
+
 export function checkHealth() {
   return getAppStatus()
 }

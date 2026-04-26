@@ -1,10 +1,21 @@
-# Java Metrics Tool
+# Metrics Tool Workbench
+
+[中文说明](README.zh-CN.md)
+
+## Core Mainlines
+
+The course project is explicitly converged to three mainlines:
+
+- code metrics
+- design diagram metrics
+- project estimation
 
 ## Environment
 
 - JDK 17
 - Maven 3.9+
 - Node.js 24
+- Python 3.11 (for `diagram-recognition-service`)
 
 ## Desktop Usage
 
@@ -45,7 +56,7 @@ npm run test
 powershell -ExecutionPolicy Bypass -File .\metrics-desktop\scripts\build-installer.ps1
 ```
 
-## Features
+## Course Defense References
 
 - pasted code analysis
 - single file analysis
