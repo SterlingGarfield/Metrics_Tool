@@ -46,6 +46,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Playfair Display";
+  src: url("../assets/fonts/playfair/PlayfairDisplay-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
   --font-sans: "Söhne", "Sohne", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
   --font-mono: "Söhne Mono", "Sohne Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
@@ -657,6 +665,15 @@ button {
 .results-subheading {
   margin: 0;
   color: var(--ink);
+}
+
+.workspace-slogan {
+  font-family: "Playfair Display", "Times New Roman", serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  line-height: 1.06;
+  letter-spacing: 0.01em;
 }
 
 .hero-section h1 {

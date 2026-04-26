@@ -14,8 +14,11 @@ describe('InputWorkspace', () => {
     expect(screen.getByRole('button', { name: '单文件分析' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: '多文件分析' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: '文件夹扫描' })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByText('把输入组织成一张清晰的工作台')).toBeInTheDocument()
-    expect(screen.getByText('先选阶段，再选输入范围；所有入口共用统一的分析节奏。')).toBeInTheDocument()
+    expect(screen.getByText('Measure. Analyze. Evolve.')).toBeInTheDocument()
+    expect(screen.getByText('分析工作区')).toBeInTheDocument()
+    expect(screen.queryByText('把输入组织成一张清晰的工作台')).not.toBeInTheDocument()
+    expect(screen.getByText('请在左侧选择您要使用的模式')).toBeInTheDocument()
+    expect(screen.queryByText('先选阶段，再选输入范围；所有入口共用统一的分析节奏。')).not.toBeInTheDocument()
     expect(screen.getByText('当前模式：代码输入')).toBeInTheDocument()
     expect(screen.getByText('适合快速验证某段 Java 代码的复杂度与结构指标。')).toBeInTheDocument()
 

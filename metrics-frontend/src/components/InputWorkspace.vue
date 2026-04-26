@@ -2,11 +2,9 @@
   <section class="panel input-panel workspace-panel">
     <div class="workspace-intro">
       <div class="workspace-intro-copy">
+        <h2 class="workspace-slogan">Measure. Analyze. Evolve.</h2>
         <p class="workspace-kicker">分析工作区</p>
-        <h2>把输入组织成一张清晰的工作台</h2>
-        <p class="workspace-summary">
-          先选阶段，再选输入范围；所有入口共用统一的分析节奏。
-        </p>
+        <p class="workspace-summary">请在左侧选择您要使用的模式</p>
       </div>
 
       <aside class="workspace-status" aria-live="polite">
